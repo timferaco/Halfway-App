@@ -13,13 +13,21 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.util.ArrayList;
 
 public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
         private static final String TAG = MapsActivity.class.getSimpleName();
+        ArrayList<LatLng> latlngs = new ArrayList<>();
+        MarkerOptions options = new MarkerOptions();
+        GoogleMap mMap;
 
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +50,7 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
         @Override
         public void onMapReady(GoogleMap googleMap) {
 
-
+            mMap = googleMap;
             // Position the map's camera near Sydney, Australia.
             googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(-34, 151)));
         }
@@ -59,12 +67,68 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
 
         switch(item.getItemId()) {
             case R.id.test_button:
-                //your action
+                //LatLong One Setup
+                LatLng home = new LatLng(44.473100, -73.204666);
+                latlngs.add(home);
+                // LatLong Two Setup
+                LatLng artsRiot = new LatLng(44.468231, -73.215122);
+                latlngs.add(artsRiot);
+
+                //Create marker
+                Marker m1 = mMap.addMarker(new MarkerOptions()
+                        .position(home)
+                        .anchor(0.5f, 0.5f)
+                        .title("Home")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+
+                Marker m2 = mMap.addMarker(new MarkerOptions()
+                        .position(artsRiot)
+                        .anchor(0.5f, 0.5f)
+                        .title("ArtsRiot")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(home));
+
+                // Construct a CameraPosition focusing on Mountain View and animate the camera to that position.
+                //https://developers.google.com/maps/documentation/android-sdk/views
+                CameraPosition cameraPosition = new CameraPosition.Builder()
+                        .target(home)      // Sets the center of the map to Mountain View
+                        .zoom(13)                   // Sets the zoom
+                        .bearing(90)                // Sets the orientation of the camera to east
+                        .build();                   // Creates a CameraPosition from the builder
+                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
+
+                //Create the URL to get request from first marker to second marker
+                String url = getRequestUrl(latlngs.get(0), latlngs.get(1));
+                Log.d("TAG", url);
                 break;
             default:
                 return super.onOptionsItemSelected(item);
         }
 
+
+
         return true;
     }
+
+    //Preparing for Directions API, returns the correct info
+    private String getRequestUrl(LatLng origin, LatLng dest) {
+        //Value of origin
+        String org = "origin=" + origin.latitude +","+origin.longitude;
+        //Value of destination
+        String destination = "destination=" + dest.latitude+","+dest.longitude;
+        //Set value enable the sensor
+        String sensor = "sensor=false";
+        //Mode for find direction
+        //!!! CAN CHANGE MODE !!!
+        String mode = "mode=driving";
+        //Build the full param
+        String param = org +"&" + destination + "&" +sensor+"&" +mode;
+        //Output format
+        String output = "json";
+        //Create url to request
+        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param;
+        return url;
+    }
+
 }
