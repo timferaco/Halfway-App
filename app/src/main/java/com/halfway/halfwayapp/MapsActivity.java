@@ -21,13 +21,19 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
+import java.lang.Object.*;
+import com.google.firebase.*;
 
 public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
+
+
+
 
         private static final String TAG = MapsActivity.class.getSimpleName();
         ArrayList<LatLng> latlngs = new ArrayList<>();
         MarkerOptions options = new MarkerOptions();
         GoogleMap mMap;
+        private UserLocation mUserLocation;
 
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +115,17 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
 
 
         return true;
+    }
+
+    private void saveUserLocation(){
+
+        if(mUserLocation != null) {
+           // DocumentReference docRef = db.collection("cities").document("SF");
+
+
+        }
+
+
     }
 
     //Preparing for Directions API, returns the correct info
