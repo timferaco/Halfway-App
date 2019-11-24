@@ -19,12 +19,15 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
 import java.lang.Object.*;
 import com.google.firebase.*;
+import java.util.Map;
 
-public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallback, TaskLoadedCallback {
 
 
 
@@ -34,6 +37,7 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
         MarkerOptions options = new MarkerOptions();
         GoogleMap mMap;
         private UserLocation mUserLocation;
+        Polyline drawDir;
 
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -100,13 +104,16 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
                 CameraPosition cameraPosition = new CameraPosition.Builder()
                         .target(home)      // Sets the center of the map to Mountain View
                         .zoom(13)                   // Sets the zoom
-                        .bearing(90)                // Sets the orientation of the camera to east
+                        .bearing(0)                // Sets the orientation of the camera to east
                         .build();                   // Creates a CameraPosition from the builder
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
                 //Create the URL to get request from first marker to second marker
                 String url = getRequestUrl(latlngs.get(0), latlngs.get(1));
-                Log.d("TAG", url);
+                Log.d("RequestURL", url);
+                FetchURL furl = new FetchURL(MapsActivity.this);
+                furl.execute(url, "driving");
+
                 break;
             default:
                 return super.onOptionsItemSelected(item);
@@ -144,8 +151,14 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
         //Output format
         String output = "json";
         //Create url to request
-        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param;
+        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param + "&key=" + getString(R.string.google_maps_key);
         return url;
     }
 
+    @Override
+    public void onTaskDone(Object... values) {
+        if (drawDir != null)
+            drawDir.remove();
+        drawDir = mMap.addPolyline((PolylineOptions) values[0]);
+    }
 }
