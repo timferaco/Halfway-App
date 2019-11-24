@@ -22,13 +22,20 @@ import com.halfway.halfwayapp.MapRequestHelpers.FetchURL;
 import com.halfway.halfwayapp.MapRequestHelpers.TaskLoadedCallback;
 
 import java.util.ArrayList;
+import java.lang.Object.*;
+import com.google.firebase.*;
+import java.util.Map;
 
 public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallback, TaskLoadedCallback {
+
+
+
 
         private static final String TAG = MapsActivity.class.getSimpleName();
         ArrayList<LatLng> latlngs = new ArrayList<>();
         MarkerOptions options = new MarkerOptions();
         GoogleMap mMap;
+        private UserLocation mUserLocation;
         Polyline drawDir;
 
         @Override
@@ -114,6 +121,17 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
 
 
         return true;
+    }
+
+    private void saveUserLocation(){
+
+        if(mUserLocation != null) {
+           // DocumentReference docRef = db.collection("cities").document("SF");
+
+
+        }
+
+
     }
 
     //Preparing for Directions API, returns the correct info
