@@ -1,4 +1,4 @@
-package com.halfway.halfwayapp;
+package com.halfway.halfwayapp.MapRequestHelpers;
 
 import com.google.android.gms.maps.model.LatLng;
 

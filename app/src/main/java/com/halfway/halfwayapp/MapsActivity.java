@@ -1,9 +1,7 @@
 package com.halfway.halfwayapp;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.FragmentActivity;
 
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -16,14 +14,14 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.halfway.halfwayapp.MapRequestHelpers.FetchURL;
+import com.halfway.halfwayapp.MapRequestHelpers.TaskLoadedCallback;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallback, TaskLoadedCallback {
 
