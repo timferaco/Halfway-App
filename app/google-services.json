@@ -15,6 +15,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "486511031992-hlpagajaekdgj829tdre084bq0607qir.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.halfway.halfwayapp",
+            "certificate_hash": "6542e7b129f18525a092759ed79d10fa54b7c68a"
+          }
+        },
+        {
+          "client_id": "486511031992-tj7cq0hjpdra9fbrvoq0kog8va14p1g2.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.halfway.halfwayapp",
+            "certificate_hash": "90e5942bc47d3c4cfd61eb27e2d160cf3c1de3c9"
+          }
+        },
+        {
           "client_id": "486511031992-fedms4eluqocn63bh409e4bpv822thl6.apps.googleusercontent.com",
           "client_type": 3
         }

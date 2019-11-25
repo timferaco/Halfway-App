@@ -1,5 +1,6 @@
 package com.halfway.halfwayapp;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
@@ -14,10 +15,16 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.halfway.halfwayapp.MapRequestHelpers.FetchURL;
 import com.halfway.halfwayapp.MapRequestHelpers.TaskLoadedCallback;
 
@@ -32,11 +39,12 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
 
 
         private static final String TAG = MapsActivity.class.getSimpleName();
-        ArrayList<LatLng> latlngs = new ArrayList<>();
+        ArrayList<LatLng> latlngs;
         MarkerOptions options = new MarkerOptions();
         GoogleMap mMap;
         private UserLocation mUserLocation;
         Polyline drawDir;
+        FirebaseFirestore db;
 
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +58,9 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
                     (SupportMapFragment) getSupportFragmentManager()
                             .findFragmentById(R.id.map);
             mapFragment.getMapAsync(this);
+            db = FirebaseFirestore.getInstance();
+            latlngs = new ArrayList<>();
+            saveUserLocation();
         }
 
         /**
@@ -73,35 +84,35 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
+        //saveUserLocation();
         switch(item.getItemId()) {
             case R.id.test_button:
                 //LatLong One Setup
-                LatLng home = new LatLng(44.473100, -73.204666);
-                latlngs.add(home);
+                //LatLng home = new LatLng(44.473100, -73.204666);
+                //latlngs.add(home);
                 // LatLong Two Setup
-                LatLng artsRiot = new LatLng(44.468231, -73.215122);
-                latlngs.add(artsRiot);
+                //LatLng artsRiot = new LatLng(44.468231, -73.215122);
+                //latlngs.add(artsRiot);
 
                 //Create marker
                 Marker m1 = mMap.addMarker(new MarkerOptions()
-                        .position(home)
+                        .position(latlngs.get(0))
                         .anchor(0.5f, 0.5f)
-                        .title("Home")
+                        .title("Position 1")
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
 
                 Marker m2 = mMap.addMarker(new MarkerOptions()
-                        .position(artsRiot)
+                        .position(latlngs.get(1))
                         .anchor(0.5f, 0.5f)
-                        .title("ArtsRiot")
+                        .title("Position 2")
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
 
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(home));
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(latlngs.get(0)));
 
                 // Construct a CameraPosition focusing on Mountain View and animate the camera to that position.
                 //https://developers.google.com/maps/documentation/android-sdk/views
                 CameraPosition cameraPosition = new CameraPosition.Builder()
-                        .target(home)      // Sets the center of the map to Mountain View
+                        .target(latlngs.get(0))      // Sets the center of the map to Mountain View
                         .zoom(13)                   // Sets the zoom
                         .bearing(0)                // Sets the orientation of the camera to east
                         .build();                   // Creates a CameraPosition from the builder
@@ -124,12 +135,28 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
     }
 
     private void saveUserLocation(){
+        db.collection("UserLocation")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (QueryDocumentSnapshot document : task.getResult()) {
+                                Log.d(TAG, document.getId() + " => " + document.getData());
+                                Log.d(TAG, document.get("latlng").toString());
+                                GeoPoint tempGP = (GeoPoint) document.get("latlng");
+                                LatLng tempLL = new LatLng(tempGP.getLatitude(), tempGP.getLongitude());
 
-        if(mUserLocation != null) {
-           // DocumentReference docRef = db.collection("cities").document("SF");
+                                latlngs.add(tempLL);
+                                Log.d(TAG, "latlngs size: " + latlngs.size());
 
 
-        }
+                            }
+                        } else {
+                            Log.w(TAG, "Error getting documents.", task.getException());
+                        }
+                    }
+                });
 
 
     }
