@@ -119,7 +119,7 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
 
                 //Create the URL to get request from first marker to second marker
-                String url = getRequestUrl(latlngs.get(0), latlngs.get(1));
+                String url = getRequestUrl(latlngs.get(0), latlngs.get(1), 2);
                 Log.d("RequestURL", url);
                 FetchURL furl = new FetchURL(MapsActivity.this);
                 furl.execute(url, "driving");
@@ -160,25 +160,52 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
 
 
     }
-
     //Preparing for Directions API, returns the correct info
-    private String getRequestUrl(LatLng origin, LatLng dest) {
-        //Value of origin
-        String org = "origin=" + origin.latitude +","+origin.longitude;
-        //Value of destination
-        String destination = "destination=" + dest.latitude+","+dest.longitude;
-        //Set value enable the sensor
-        String sensor = "sensor=false";
-        //Mode for find direction
-        //!!! CAN CHANGE MODE !!!
-        String mode = "mode=driving";
-        //Build the full param
-        String param = org +"&" + destination + "&" +sensor+"&" +mode;
-        //Output format
-        String output = "json";
-        //Create url to request
-        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param + "&key=" + getString(R.string.google_maps_key);
-        return url;
+    private String getRequestUrl(LatLng origin, LatLng dest, int identifier) {
+        String url = "";
+            switch(identifier){
+
+                case 1:
+                    //Value of origin
+                    String org = "origin=" + origin.latitude +","+origin.longitude;
+                    //Value of destination
+                    String destination = "destination=" + dest.latitude+","+dest.longitude;
+                    //Set value enable the sensor
+                    String sensor = "sensor=false";
+                    //Mode for find direction
+                    //!!! CAN CHANGE MODE !!!
+                    String mode = "mode=driving";
+                    //Build the full param
+                    String param = org +"&" + destination + "&" +sensor+"&" +mode;
+                    //Output format
+                    String output = "json";
+                    //Create url to request
+                    url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param + "&key=" + getString(R.string.google_maps_key);
+                    return url;
+
+                case 2:
+                    //https://maps.googleapis.com/maps/api/place/textsearch/json?location=44.482618,-73.209405&radius=1000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ
+                    //https://maps.googleapis.com/maps/api/place/textsearch/json?query=123+main+street&location=42.3675294,-71.186966&radius=10000&key=YOUR_API_KEY
+
+
+                    //https://maps.googleapis.com/maps/api/place/textsearch/json?type=restuarant&location=44.482618,-73.209405&radius=10000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ
+                    //https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location=44.482618,-73.209405&radius=10000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ
+                    //https://maps.googleapis.com/maps/api/place/textsearch/json?type=restuarant&location=44.482618,-73.209405&radius=10000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ
+                    output = "json";
+                    int radius = 10000;
+                    url = "https://maps.googleapis.com/maps/api/place/textsearch/" + output + "?type=restuarant&location=" + origin.latitude +","+origin.longitude + "&radius=" + radius + "&key=" + getString(R.string.google_maps_key);
+                    Log.d("URL B4 CALL", url);
+                    return url;
+
+                    default: return "";
+
+
+
+
+
+            }
+
+
     }
 
     @Override
