@@ -1,12 +1,20 @@
 package com.halfway.halfwayapp;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresPermission;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.CheckBox;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -15,6 +23,11 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.libraries.places.api.Places;
+import com.google.android.libraries.places.api.model.Place;
+import com.google.android.libraries.places.api.net.FindCurrentPlaceRequest;
+import com.google.android.libraries.places.api.net.FindCurrentPlaceResponse;
+import com.google.android.libraries.places.api.net.PlacesClient;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -25,13 +38,19 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.android.libraries.places.api.model.PlaceLikelihood;
+
+
 import com.halfway.halfwayapp.MapRequestHelpers.FetchURL;
 import com.halfway.halfwayapp.MapRequestHelpers.TaskLoadedCallback;
 
 import java.util.ArrayList;
-import java.lang.Object.*;
-import com.google.firebase.*;
-import java.util.Map;
+
+import java.util.List;
+
+
+import static android.Manifest.permission.ACCESS_FINE_LOCATION;
+import static android.Manifest.permission.ACCESS_WIFI_STATE;
 
 public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallback, TaskLoadedCallback {
 
@@ -45,6 +64,8 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
         private UserLocation mUserLocation;
         Polyline drawDir;
         FirebaseFirestore db;
+        FieldSelector fieldSelector;
+        PlacesClient placesClient;
 
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +82,19 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
             db = FirebaseFirestore.getInstance();
             latlngs = new ArrayList<>();
             saveUserLocation();
+
+            List<Place.Field> placeFields =
+                    FieldSelector.allExcept(
+                            Place.Field.ADDRESS_COMPONENTS,
+                            Place.Field.OPENING_HOURS,
+                            Place.Field.PHONE_NUMBER,
+                            Place.Field.UTC_OFFSET,
+                            Place.Field.WEBSITE_URI);
+
+            fieldSelector =
+                    new FieldSelector(
+                            placeFields,
+                            savedInstanceState);
         }
 
         /**
@@ -87,14 +121,8 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
         //saveUserLocation();
         switch(item.getItemId()) {
             case R.id.test_button:
-                //LatLong One Setup
-                //LatLng home = new LatLng(44.473100, -73.204666);
-                //latlngs.add(home);
-                // LatLong Two Setup
-                //LatLng artsRiot = new LatLng(44.468231, -73.215122);
-                //latlngs.add(artsRiot);
 
-                //Create marker
+                /*//Create marker
                 Marker m1 = mMap.addMarker(new MarkerOptions()
                         .position(latlngs.get(0))
                         .anchor(0.5f, 0.5f)
@@ -123,6 +151,12 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
                 Log.d("RequestURL", url);
                 FetchURL furl = new FetchURL(MapsActivity.this);
                 furl.execute(url, "driving");
+                */
+
+                Places.initialize(this, getString(R.string.google_api_key));
+                placesClient = Places.createClient(this);
+                findCurrentPlace();
+
 
                 break;
             default:
@@ -163,55 +197,115 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
     //Preparing for Directions API, returns the correct info
     private String getRequestUrl(LatLng origin, LatLng dest, int identifier) {
         String url = "";
-            switch(identifier){
+        //Value of origin
+        String org = "origin=" + origin.latitude + "," + origin.longitude;
+        //Value of destination
+        String destination = "destination=" + dest.latitude + "," + dest.longitude;
+        //Set value enable the sensor
+        String sensor = "sensor=false";
+        //Mode for find direction
+        //!!! CAN CHANGE MODE !!!
+        String mode = "mode=driving";
+        //Build the full param
+        String param = org + "&" + destination + "&" + sensor + "&" + mode;
+        //Output format
+        String output = "json";
+        //Create url to request
+        url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param + "&key=" + getString(R.string.google_maps_key);
+        return url;
 
-                case 1:
-                    //Value of origin
-                    String org = "origin=" + origin.latitude +","+origin.longitude;
-                    //Value of destination
-                    String destination = "destination=" + dest.latitude+","+dest.longitude;
-                    //Set value enable the sensor
-                    String sensor = "sensor=false";
-                    //Mode for find direction
-                    //!!! CAN CHANGE MODE !!!
-                    String mode = "mode=driving";
-                    //Build the full param
-                    String param = org +"&" + destination + "&" +sensor+"&" +mode;
-                    //Output format
-                    String output = "json";
-                    //Create url to request
-                    url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param + "&key=" + getString(R.string.google_maps_key);
-                    return url;
+    }
 
-                case 2:
-                    //https://maps.googleapis.com/maps/api/place/textsearch/json?location=44.482618,-73.209405&radius=1000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ
-                    //https://maps.googleapis.com/maps/api/place/textsearch/json?query=123+main+street&location=42.3675294,-71.186966&radius=10000&key=YOUR_API_KEY
+        @Override
+        public void onTaskDone(Object... values) {
+            if (drawDir != null)
+                drawDir.remove();
+            drawDir = mMap.addPolyline((PolylineOptions) values[0]);
+        }
+
+    private void findCurrentPlace() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_WIFI_STATE)
+                != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(
+                    this,
+                    "Both ACCESS_WIFI_STATE & ACCESS_FINE_LOCATION permissions are required",
+                    Toast.LENGTH_SHORT)
+                    .show();
+        }
+
+        // Note that it is not possible to request a normal (non-dangerous) permission from
+        // ActivityCompat.requestPermissions(), which is why the checkPermission() only checks if
+        // ACCESS_FINE_LOCATION is granted. It is still possible to check whether a normal permission
+        // is granted or not using ContextCompat.checkSelfPermission().
+        if (checkPermission(ACCESS_FINE_LOCATION)) {
+            findCurrentPlaceWithPermissions();
+        }
+    }
+
+    /**
+     * Fetches a list of {@link PlaceLikelihood} instances that represent the Places the user is
+     * most
+     * likely to be at currently.
+     */
+    @RequiresPermission(allOf = {ACCESS_FINE_LOCATION, ACCESS_WIFI_STATE})
+    private void findCurrentPlaceWithPermissions() {
+
+        FindCurrentPlaceRequest currentPlaceRequest =
+                FindCurrentPlaceRequest.newInstance(getPlaceFields());
+        Task<FindCurrentPlaceResponse> currentPlaceTask =
+                placesClient.findCurrentPlace(currentPlaceRequest);
+
+        currentPlaceTask.addOnSuccessListener(
+                (response) ->
+                        parseResponse(response)
+
+                        );
+
+        currentPlaceTask.addOnFailureListener(
+                (exception) -> {
+                    Log.d("FAILURE:", exception.toString());
+                });
+
+    }
 
 
-                    //https://maps.googleapis.com/maps/api/place/textsearch/json?type=restuarant&location=44.482618,-73.209405&radius=10000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ
-                    //https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location=44.482618,-73.209405&radius=10000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ
-                    //https://maps.googleapis.com/maps/api/place/textsearch/json?type=restuarant&location=44.482618,-73.209405&radius=10000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ
-                    output = "json";
-                    int radius = 10000;
-                    url = "https://maps.googleapis.com/maps/api/place/textsearch/" + output + "?type=restuarant&location=" + origin.latitude +","+origin.longitude + "&radius=" + radius + "&key=" + getString(R.string.google_maps_key);
-                    Log.d("URL B4 CALL", url);
-                    return url;
+    public static void parseResponse(FindCurrentPlaceResponse response) {
 
-                    default: return "";
+        System.out.println(response.toString());
 
+        List<PlaceLikelihood> allLikelyHoods = response.getPlaceLikelihoods();
 
+        Place a = allLikelyHoods.get(0).getPlace();
 
+        System.out.println(allLikelyHoods.size());
+        System.out.println(a.getRating());
+        System.out.println(a.getPriceLevel());
+        System.out.println(a.getUserRatingsTotal());
 
-
-            }
 
 
     }
 
-    @Override
-    public void onTaskDone(Object... values) {
-        if (drawDir != null)
-            drawDir.remove();
-        drawDir = mMap.addPolyline((PolylineOptions) values[0]);
+    //////////////////////////
+    // Helper methods below //
+    //////////////////////////
+
+
+
+    private boolean checkPermission(String permission) {
+        boolean hasPermission =
+                ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED;
+        if (!hasPermission) {
+            ActivityCompat.requestPermissions(this, new String[]{permission}, 0);
+        }
+        return hasPermission;
     }
+
+    private List<Place.Field> getPlaceFields() {
+
+        return fieldSelector.getAllFields();
+    }
+
 }
