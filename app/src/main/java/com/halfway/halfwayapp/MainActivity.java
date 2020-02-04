@@ -1,7 +1,10 @@
 package com.halfway.halfwayapp;
 
 import androidx.annotation.*;
+
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.gson.JsonArray;
 
 import androidx.appcompat.app.*;
 
@@ -26,7 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private BottomSheetBehavior mBottomSheetBehavior;
     private TextView mTextViewState;
 
-    private ArrayList<String> mPlaceIDs;
+    private ArrayList<PlaceCard> mPlaces;
     private OkHttpClient mHTTPClient;
     final private String MAPS_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json?&location=";
 
@@ -38,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mPlaceIDs = new ArrayList<String>();
+        mPlaces = new ArrayList<PlaceCard>();
         mHTTPClient = new OkHttpClient();
 
         View bottomSheet = findViewById(R.id.bottom_sheet);
@@ -98,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected String doInBackground(Void... voids) {
             Request request = new Request.Builder()
-                    .url("https://maps.googleapis.com/maps/api/place/textsearch/json?type=restuarant&location=44.482618,-73.209405&radius=10000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ")
+                    .url("https://maps.googleapis.com/maps/api/place/textsearch/json?type=bakery&location=44.482618,-73.209405&radius=10000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ")
                     .build();
 
 
@@ -113,7 +116,6 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            Log.d(RESPONSE_TAG, result);
             parseJSON(result);
 
         }
@@ -127,19 +129,38 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void parseJSON(String jsonString) {
-        //mPhotosURLs.clear();
+        String id;
+        String name;
+        PlaceCard temp;
+        String address;
+        JSONArray category;
+
         try {
             JSONObject responseObject = new JSONObject(jsonString);
             JSONArray items = responseObject.getJSONArray("results");
             for (int i = 0; i < items.length(); i++) {
+                //Store id address and name
                 JSONObject item = items.getJSONObject(i);
-                String urlString = item.getString("id");
-                mPlaceIDs.add(0, urlString);
+                id = item.getString("id");
+                address = item.getString("formatted_address");
+                name = item.getString("name");
+
+                //Store Type
+                category = item.getJSONArray("types");
+                String categoryInfo = category.get(0).toString();
+
+                //Store Coords
+                JSONObject geometry = item.getJSONObject("geometry").getJSONObject("location");
+                LatLng coordinates = new LatLng(geometry.getDouble("lat"), geometry.getDouble("lng"));
+
+                //Create Object
+                temp = new PlaceCard(id, name, coordinates, address, categoryInfo);
+                mPlaces.add(temp);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Log.d("BLAH",Integer.toString(mPlaceIDs.size()));
+
     }
 
 }

@@ -120,7 +120,6 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
 
                 //Create the URL to get request from first marker to second marker
                 String url = getRequestUrl(latlngs.get(0), latlngs.get(1));
-                Log.d("RequestURL", url);
                 FetchURL furl = new FetchURL(MapsActivity.this);
                 furl.execute(url, "driving");
 
@@ -142,13 +141,10 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
                         if (task.isSuccessful()) {
                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                Log.d(TAG, document.getId() + " => " + document.getData());
-                                Log.d(TAG, document.get("latlng").toString());
                                 GeoPoint tempGP = (GeoPoint) document.get("latlng");
                                 LatLng tempLL = new LatLng(tempGP.getLatitude(), tempGP.getLongitude());
 
                                 latlngs.add(tempLL);
-                                Log.d(TAG, "latlngs size: " + latlngs.size());
 
 
                             }
