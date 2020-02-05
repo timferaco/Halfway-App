@@ -109,14 +109,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         refresh();
-        mPlaceAdapter.notifyDataSetChanged();
+
     }
 
     private class RefreshTask extends AsyncTask<Void, Void, String> {
         @Override
         protected String doInBackground(Void... voids) {
             Request request = new Request.Builder()
-                    .url("https://maps.googleapis.com/maps/api/place/textsearch/json?type=bakery&location=44.482618,-73.209405&radius=10000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ")
+                    .url("https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location=44.482618,-73.209405&radius=10000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ")
                     .build();
 
 
@@ -151,7 +151,6 @@ public class MainActivity extends AppCompatActivity {
         String address;
         JSONArray category;
         String iconURL;
-
         try {
             JSONObject responseObject = new JSONObject(jsonString);
             JSONArray items = responseObject.getJSONArray("results");
@@ -179,7 +178,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        mPlaceAdapter.notifyDataSetChanged();
     }
 
     private class PlaceHolder extends RecyclerView.ViewHolder {
@@ -196,7 +195,8 @@ public class MainActivity extends AppCompatActivity {
 
         public void bind(PlaceCard place) {
 
-            Picasso.get().load(place.getmIconURL()).into(iv);
+            Picasso.get().load("https://maps.googleapis.com/maps/api/place/photo?" + place.getmIconURL()).into(iv);
+            Log.d("blahhhh", place.getmName());
             title.setText(place.getmName());
             cat.setText(place.getmCategory());
             //iv.setImageBitmap(b);
