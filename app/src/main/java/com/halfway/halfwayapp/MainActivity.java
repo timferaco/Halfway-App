@@ -5,6 +5,7 @@ import androidx.annotation.*;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.squareup.picasso.Picasso;
 
 import androidx.appcompat.app.*;
@@ -135,8 +136,6 @@ public class MainActivity extends AppCompatActivity {
             parseJSON(result);
 
         }
-
-
     }
 
     private void refresh() {
@@ -160,12 +159,16 @@ public class MainActivity extends AppCompatActivity {
                 id = item.getString("id");
                 address = item.getString("formatted_address");
                 name = item.getString("name");
-                iconURL = item.getString("icon");
+
+
+
+                iconURL = item.getJSONArray("photos").getJSONObject(0).getString("photo_reference");
 
 
                 //Store Type
                 category = item.getJSONArray("types");
                 String categoryInfo = category.get(0).toString();
+                categoryInfo = categoryInfo.substring(0,1).toUpperCase() + categoryInfo.substring(1, categoryInfo.length());
 
                 //Store Coords
                 JSONObject geometry = item.getJSONObject("geometry").getJSONObject("location");
@@ -185,19 +188,22 @@ public class MainActivity extends AppCompatActivity {
         private ImageView iv;
         private TextView title;
         private TextView cat;
+        private TextView add;
 
         public PlaceHolder (@NonNull View itemView) {
             super(itemView);
             iv = itemView.findViewById(R.id.place_img);
             title = itemView.findViewById(R.id.place_title);
+            add = itemView.findViewById(R.id.place_address);
             cat = itemView.findViewById(R.id.place_category);
         }
 
         public void bind(PlaceCard place) {
 
-            Picasso.get().load("https://maps.googleapis.com/maps/api/place/photo?" + place.getmIconURL()).into(iv);
+            Picasso.get().load("https://maps.googleapis.com/maps/api/place/photo?" + place.getmIconURL() + "&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ").into(iv);
             Log.d("blahhhh", place.getmName());
             title.setText(place.getmName());
+            add.setText(place.getmAddress());
             cat.setText(place.getmCategory());
             //iv.setImageBitmap(b);
 
