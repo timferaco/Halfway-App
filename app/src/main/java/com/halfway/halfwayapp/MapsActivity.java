@@ -84,7 +84,7 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        //saveUserLocation();
+        saveUserLocation();
         switch(item.getItemId()) {
             case R.id.test_button:
                 //LatLong One Setup
