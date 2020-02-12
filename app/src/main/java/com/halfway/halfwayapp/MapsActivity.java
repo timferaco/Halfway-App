@@ -15,8 +15,6 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -63,7 +61,6 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
             db = FirebaseFirestore.getInstance();
             latlngs = new ArrayList<>();
             saveUserLocation();
-
         }
 
         /**
@@ -85,15 +82,9 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
         return true;
     }
 
-
-
-
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         saveUserLocation();
-
-        Log.d("TAG", Integer.toString(latlngs.size()));
         switch(item.getItemId()) {
             case R.id.test_button:
                 //LatLong One Setup
@@ -136,8 +127,6 @@ public class  MapsActivity extends AppCompatActivity implements OnMapReadyCallba
             default:
                 return super.onOptionsItemSelected(item);
         }
-
-
 
 
 

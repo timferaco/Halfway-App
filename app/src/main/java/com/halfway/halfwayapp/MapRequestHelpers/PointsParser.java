@@ -7,10 +7,6 @@ import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.GeoPoint;
 import com.google.maps.android.SphericalUtil;
 
 import org.json.JSONObject;
@@ -19,7 +15,6 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static com.google.maps.android.SphericalUtil.computeDistanceBetween;
 import static com.google.maps.android.SphericalUtil.interpolate;
@@ -33,7 +28,6 @@ import static com.google.maps.android.SphericalUtil.interpolate;
 public class PointsParser extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
     TaskLoadedCallback taskCallback;
     String directionMode = "driving";
-    private DatabaseReference mDatabase;
 
     public PointsParser(Context mContext, String directionMode) {
         this.taskCallback = (TaskLoadedCallback) mContext;
@@ -70,7 +64,6 @@ public class PointsParser extends AsyncTask<String, Integer, List<List<HashMap<S
     protected void onPostExecute(List<List<HashMap<String, String>>> result) {
         ArrayList<LatLng> points;
         PolylineOptions lineOptions = null;
-        ArrayList<LatLng> temp;
         // Traversing through all the routes
         for (int i = 0; i < result.size(); i++) {
             points = new ArrayList<>();
@@ -86,9 +79,11 @@ public class PointsParser extends AsyncTask<String, Integer, List<List<HashMap<S
                 points.add(position);
             }
 
+            System.out.println(points.size());
+            //Midpoint is below
+            LatLng midpoint = findMidPoint(points);
             // Adding all the points in the route to LineOptions
             lineOptions.addAll(points);
-            LatLng midpoint = findMidPoint(points);
             if (directionMode.equalsIgnoreCase("walking")) {
                 lineOptions.width(10);
                 lineOptions.color(Color.MAGENTA);
@@ -110,7 +105,6 @@ public class PointsParser extends AsyncTask<String, Integer, List<List<HashMap<S
     }
 
     LatLng findMidPoint(ArrayList<LatLng> points) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
 
 
         LatLng temp = points.get(0);
@@ -168,14 +162,6 @@ public class PointsParser extends AsyncTask<String, Integer, List<List<HashMap<S
         Log.d("START", Integer.toString(start.size()));
         Log.d("END", Integer.toString(end.size()));
         Log.d("MIDPOINT", temp.toString());
-        GeoPoint upload = new GeoPoint(temp.latitude, temp.longitude);
-
-        Map<String, Object> user = new HashMap<>();
-        user.put("midpoint", upload);
-
-        db.collection("Midpoint").document("kxLhrrEpYoCNgvogDte7").set(user);
-
-        Log.d("CHECK DATABASE", "YURR");
         return temp;
     }
 }
