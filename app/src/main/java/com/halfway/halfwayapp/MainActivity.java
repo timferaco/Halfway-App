@@ -16,6 +16,8 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -27,7 +29,6 @@ import com.halfway.halfwayapp.MapRequestHelpers.TaskLoadedCallback;
 import com.squareup.picasso.Picasso;
 
 import androidx.appcompat.app.*;
-import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -55,8 +56,6 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static android.widget.LinearLayout.HORIZONTAL;
-
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, TaskLoadedCallback {
     private BottomSheetBehavior mBottomSheetBehavior;
     private TextView mTextViewState;
@@ -71,6 +70,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleMap mMap;
     private Polyline drawDir;
     private ArrayList<LatLng> latlngs;
+    private LatLng midpointLatLng;
 
     final private String MAPS_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json?&location=";
     final private String RESPONSE_TAG = "com.halfway.response";
@@ -94,9 +94,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mPlaceRecycler = (RecyclerView) findViewById(R.id.places_recycler);
         mPlaceRecycler.setLayoutManager(new LinearLayoutManager(this));
         mPlaceRecycler.setAdapter(mPlaceAdapter);
-
-        DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
-        mPlaceRecycler.addItemDecoration(itemDecor);
 
         mPlaces = new ArrayList<PlaceCard>();
         mHTTPClient = new OkHttpClient();
@@ -136,6 +133,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         refresh();
 
 
+
+    }
+
+    public void grabMidpoint(){
+        Log.d("INHERE", "TAG");
+
+
+
     }
 
     @Override
@@ -160,6 +165,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         fetchUserLocations();
+
+        System.out.println("!!!" + midpointLatLng);
         switch(item.getItemId()) {
             case R.id.test_button:
 
@@ -171,10 +178,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
 
                 Marker m2 = mMap.addMarker(new MarkerOptions()
-                        .position(latlngs.get(1))
+                    .position(latlngs.get(1))
+                    .anchor(0.5f, 0.5f)
+                    .title("Position 2")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+
+                Marker m3 = mMap.addMarker(new MarkerOptions()
+                        .position(latlngs.get(2))
                         .anchor(0.5f, 0.5f)
                         .title("Position 2")
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
 
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(latlngs.get(0)));
 
@@ -229,10 +242,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 GeoPoint tempGP = (GeoPoint) document.get("latlng");
                                 LatLng tempLL = new LatLng(tempGP.getLatitude(), tempGP.getLongitude());
-
                                 latlngs.add(tempLL);
-
-
                             }
                         } else {
                             Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
@@ -240,14 +250,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }
                 });
 
+            DocumentReference docRef = db.collection( "Midpoint").document("kxLhrrEpYoCNgvogDte7");
+            docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        Log.d("TAG", "DocumentSnapshot data: " + document.getData());
+                        GeoPoint tempGP = (GeoPoint) document.get("midpoint");
+                        LatLng midpoint = new LatLng(tempGP.getLatitude(), tempGP.getLongitude());
+                        latlngs.add(midpoint);
+                    } else {
+                        Log.d("TAG", "No such document");
+                    }
+                } else {
+                    Log.d("TAG", "get failed with ", task.getException());
+                }
+            }
+        });
+
+
 
     }
 
     private class RefreshTask extends AsyncTask<Void, Void, String> {
         @Override
         protected String doInBackground(Void... voids) {
+            grabMidpoint();
             Request request = new Request.Builder()
-                    .url("https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location=44.482618,-73.209405&radius=10000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ")
+                    .url("https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location=33.89028,-118.36024&radius=10000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ")
                     .build();
 
 
@@ -289,11 +322,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 id = item.getString("id");
                 address = item.getString("formatted_address");
                 name = item.getString("name");
-
-
-
                 iconURL = item.getJSONArray("photos").getJSONObject(0).getString("photo_reference");
-
 
                 //Store Type
                 category = item.getJSONArray("types");
