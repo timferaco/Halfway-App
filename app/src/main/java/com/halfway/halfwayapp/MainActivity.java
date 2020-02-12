@@ -286,7 +286,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         protected String doInBackground(Void... voids) {
             grabMidpoint();
             Request request = new Request.Builder()
-                    .url("https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location=33.89028,-118.36024&radius=10000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ")
+                    .url("https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location=43.49041,-72.12494&radius=10000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ")
                     .build();
 
 
