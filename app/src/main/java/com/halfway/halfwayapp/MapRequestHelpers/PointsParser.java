@@ -7,12 +7,17 @@ import android.util.Log;
 
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.maps.android.SphericalUtil;
 
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import static com.google.maps.android.SphericalUtil.computeDistanceBetween;
+import static com.google.maps.android.SphericalUtil.interpolate;
 
 /**
  * Created by Vishal on 10/20/2018.
@@ -73,6 +78,10 @@ public class PointsParser extends AsyncTask<String, Integer, List<List<HashMap<S
                 LatLng position = new LatLng(lat, lng);
                 points.add(position);
             }
+
+            System.out.println(points.size());
+            //Midpoint is below
+            LatLng midpoint = findMidPoint(points);
             // Adding all the points in the route to LineOptions
             lineOptions.addAll(points);
             if (directionMode.equalsIgnoreCase("walking")) {
@@ -94,4 +103,66 @@ public class PointsParser extends AsyncTask<String, Integer, List<List<HashMap<S
             Log.d("mylog", "without Polylines drawn");
         }
     }
+
+    LatLng findMidPoint(ArrayList<LatLng> points) {
+
+
+        LatLng temp = points.get(0);
+
+        ArrayList<LatLng> start = new ArrayList<>();
+        ArrayList<LatLng> end = new ArrayList<>();
+
+        //We need some error handling here for points less than size 4
+
+        start.add(points.remove(0));
+        start.add(points.remove(0));
+
+        //Take Last two endpoints to initially tell time.
+        end.add(points.remove(points.size()-1));
+        end.add(points.remove(points.size()-1));
+
+        double startTime = computeDistanceBetween(start.get(0), start.get(1));
+        double endTime = computeDistanceBetween(end.get(0), end.get(1));
+
+        while(true) {
+            Log.d("START TIME:", Double.toString(startTime));
+            Log.d("END TIME:", Double.toString(endTime));
+            double addedMeters = 0;
+            //If there are no points left, then the temp point is the midpoint
+            if (points.size() == 0) {
+                break;
+            }
+
+            //If there is a higher time for the starting person, add
+            if (startTime > endTime) {
+                temp = points.get(points.size() - 1);
+                addedMeters = computeDistanceBetween(end.get(end.size() - 1), temp);
+                if (addedMeters > 200) {
+                    //Adds to the end of list a point inbetween temp and the end of size
+                    points.add(interpolate(end.get(end.size() - 1), temp, .5));
+                } else {
+                    //Removes the temp point
+                    points.remove(points.size()-1);
+                    end.add(temp);
+                    endTime += addedMeters;
+             }
+
+            } else {
+                temp = points.get(0);
+                addedMeters = computeDistanceBetween(start.get(start.size() - 1), temp);
+                if (addedMeters > 200) {
+                     points.add(0,interpolate(start.get(start.size() - 1), temp, .5));
+                } else {
+                    points.remove(0);
+                    start.add(temp);
+                    startTime += addedMeters;
+                }
+            }
+        }
+        Log.d("START", Integer.toString(start.size()));
+        Log.d("END", Integer.toString(end.size()));
+        Log.d("MIDPOINT", temp.toString());
+        return temp;
+    }
 }
+
