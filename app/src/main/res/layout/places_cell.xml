@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="5dp"
+    android:layout_marginTop="15dp"
     android:layout_marginBottom="15dp">
 
     <ImageView
@@ -18,7 +18,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingLeft="5dp">
 
         <TextView
             android:id="@+id/place_title"
@@ -46,8 +47,21 @@
 
         <Button
             android:id="@+id/button"
-            android:layout_width="match_parent"
+            android:layout_width="102dp"
             android:layout_height="wrap_content"
-            android:text="Go!" />
+            android:layout_gravity="left"
+            android:layout_marginTop="5dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginBottom="5dp"
+            android:background="@drawable/rounded_go_button"
+            android:drawableLeft="@drawable/ic_navigation_white_24dp"
+            android:paddingLeft="15dp"
+            android:paddingRight="15dp"
+            android:text="GO"
+            android:textAlignment="center"
+            android:textAllCaps="true"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp" />
+
     </LinearLayout>
 </LinearLayout>
