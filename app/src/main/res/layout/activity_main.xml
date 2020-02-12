@@ -18,7 +18,7 @@
     <LinearLayout
         android:id="@+id/bottom_sheet"
         android:layout_width="match_parent"
-        android:layout_height="1000dp"
+        android:layout_height="wrap_content"
         android:background="@drawable/rounded_corners_sheet"
         android:orientation="vertical"
         app:behavior_hideable="false"

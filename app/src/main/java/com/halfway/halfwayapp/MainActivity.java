@@ -29,6 +29,7 @@ import com.halfway.halfwayapp.MapRequestHelpers.TaskLoadedCallback;
 import com.squareup.picasso.Picasso;
 
 import androidx.appcompat.app.*;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -55,6 +56,8 @@ import java.util.ArrayList;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
+import static android.widget.LinearLayout.HORIZONTAL;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, TaskLoadedCallback {
     private BottomSheetBehavior mBottomSheetBehavior;
@@ -94,6 +97,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mPlaceRecycler = (RecyclerView) findViewById(R.id.places_recycler);
         mPlaceRecycler.setLayoutManager(new LinearLayoutManager(this));
         mPlaceRecycler.setAdapter(mPlaceAdapter);
+
+        DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
+        mPlaceRecycler.addItemDecoration(itemDecor);
 
         mPlaces = new ArrayList<PlaceCard>();
         mHTTPClient = new OkHttpClient();
