@@ -22,7 +22,7 @@
         android:background="@drawable/rounded_corners_sheet"
         android:orientation="vertical"
         app:behavior_hideable="false"
-        app:behavior_peekHeight="300dp"
+        app:behavior_peekHeight="125dp"
         app:layout_behavior="@string/bottom_sheet_behavior">
 
         <androidx.recyclerview.widget.RecyclerView
