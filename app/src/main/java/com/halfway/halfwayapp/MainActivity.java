@@ -170,6 +170,7 @@ public class MainActivity extends AppCompatActivity {
         private TextView title;
         private TextView cat;
         private TextView add;
+        private Button but;
 
         public PlaceHolder (@NonNull View itemView) {
             super(itemView);
@@ -177,16 +178,31 @@ public class MainActivity extends AppCompatActivity {
             title = itemView.findViewById(R.id.place_title);
             add = itemView.findViewById(R.id.place_address);
             cat = itemView.findViewById(R.id.place_category);
+            but = itemView.findViewById(R.id.button);
         }
 
         public void bind(PlaceCard place) {
 
             Picasso.get().load("https://maps.googleapis.com/maps/api/place/photo?" + place.getmIconURL() + "&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ").into(iv);
-            Log.d("blahhhh", place.getmName());
+
             title.setText(place.getmName());
             add.setText(place.getmAddress());
             cat.setText(place.getmCategory());
+            final LatLng temp = place.getmCoordinates();
+            but.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    //Taken From https://developers.google.com/maps/documentation/urls/android-intents
+
+                    Uri gmmIntentUri = Uri.parse("google.navigation:q=" + temp.latitude + "," + temp.longitude);
+                    Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+                    mapIntent.setPackage("com.google.android.apps.maps");
+                    startActivity(mapIntent);
+                }
+            });
             //iv.setImageBitmap(b);
+
+
 
         }
     }
