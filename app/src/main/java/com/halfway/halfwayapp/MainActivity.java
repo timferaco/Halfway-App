@@ -2,6 +2,8 @@ package com.halfway.halfwayapp;
 
 import androidx.annotation.*;
 
+import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.IdpResponse;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -16,6 +18,10 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.firebase.auth.ActionCodeSettings;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -29,11 +35,15 @@ import com.halfway.halfwayapp.MapRequestHelpers.TaskLoadedCallback;
 import com.squareup.picasso.Picasso;
 
 import androidx.appcompat.app.*;
+import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -45,6 +55,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -52,6 +63,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -77,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     final private String MAPS_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json?&location=";
     final private String RESPONSE_TAG = "com.halfway.response";
+    private static final int RC_SIGN_IN = 123;
 
 
     @Override
@@ -170,46 +184,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        fetchUserLocations();
 
-        System.out.println("!!!" + midpointLatLng);
         switch(item.getItemId()) {
             case R.id.test_button:
+                //PopupDialog exampleDialog = new PopupDialog();
+                //exampleDialog.show(getSupportFragmentManager(), "exampleDialog");
+                List<AuthUI.IdpConfig> providers = Arrays.asList(
+                        new AuthUI.IdpConfig.EmailBuilder().build());
 
-                //Create marker
-                Marker m1 = mMap.addMarker(new MarkerOptions()
-                        .position(latlngs.get(0))
-                        .anchor(0.5f, 0.5f)
-                        .title("Position 1")
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)));
+                startActivityForResult(
+                        AuthUI.getInstance()
+                                .createSignInIntentBuilder()
+                                .setAvailableProviders(providers)
+                                .build(),
+                        RC_SIGN_IN);
 
-                Marker m2 = mMap.addMarker(new MarkerOptions()
-                    .position(latlngs.get(1))
-                    .anchor(0.5f, 0.5f)
-                    .title("Position 2")
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)));
 
-                Marker m3 = mMap.addMarker(new MarkerOptions()
-                        .position(latlngs.get(2))
-                        .anchor(0.5f, 0.5f)
-                        .title("Position 2")
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE)));
 
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(latlngs.get(0)));
-
-                // Construct a CameraPosition focusing on Mountain View and animate the camera to that position.
-                //https://developers.google.com/maps/documentation/android-sdk/views
-                CameraPosition cameraPosition = new CameraPosition.Builder()
-                        .target(latlngs.get(0))      // Sets the center of the map to Mountain View
-                        .zoom(13)                   // Sets the zoom
-                        .bearing(0)                // Sets the orientation of the camera to east
-                        .build();                   // Creates a CameraPosition from the builder
-                mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition));
-
-                //Create the URL to get request from first marker to second marker
-                String url = getRequestUrl(latlngs.get(0), latlngs.get(1));
-                FetchURL furl = new FetchURL(MainActivity.this);
-                furl.execute(url, "driving");
 
                 break;
             default:
@@ -217,6 +208,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         return true;
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RC_SIGN_IN) {
+            IdpResponse response = IdpResponse.fromResultIntent(data);
+
+            if (resultCode == RESULT_OK) {
+                // Successfully signed in
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                // ...
+            } else {
+                // Sign in failed. If response is null the user canceled the
+                // sign-in flow using the back button. Otherwise check
+                // response.getError().getErrorCode() and handle the error.
+                // ...
+            }
+        }
+    }
+
 
     //Preparing for Directions API, returns the correct info
     private String getRequestUrl(LatLng origin, LatLng dest) {
@@ -416,5 +428,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             drawDir.remove();
         drawDir = mMap.addPolyline((PolylineOptions) values[0]);
     }
+
+
 
 }
