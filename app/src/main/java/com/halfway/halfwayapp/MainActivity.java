@@ -8,18 +8,12 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.firebase.auth.ActionCodeSettings;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentReference;
@@ -28,22 +22,15 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.halfway.halfwayapp.MapRequestHelpers.FetchURL;
 import com.halfway.halfwayapp.MapRequestHelpers.TaskLoadedCallback;
 import com.squareup.picasso.Picasso;
 
 import androidx.appcompat.app.*;
-import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -55,7 +42,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -69,8 +55,6 @@ import java.util.List;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-
-import static android.widget.LinearLayout.HORIZONTAL;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, TaskLoadedCallback {
     private BottomSheetBehavior mBottomSheetBehavior;
@@ -186,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch(item.getItemId()) {
-            case R.id.test_button:
+            case R.id.log_in:
                 //PopupDialog exampleDialog = new PopupDialog();
                 //exampleDialog.show(getSupportFragmentManager(), "exampleDialog");
                 List<AuthUI.IdpConfig> providers = Arrays.asList(
@@ -203,6 +187,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
                 break;
+            case R.id.log_out:
+                //TODO: implement logout
+                break;
+            case R.id.change_picture:
+                //TODO: implement change picture
+                break;
+            case R.id.del_acct:
+                //TODO: implement delete account
+                break;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
