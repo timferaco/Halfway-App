@@ -196,6 +196,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             case R.id.del_acct:
                 //TODO: implement delete account
                 break;
+            case R.id.chat:
+                //TODO: implement chat
+                break;
 
             default:
                 return super.onOptionsItemSelected(item);
