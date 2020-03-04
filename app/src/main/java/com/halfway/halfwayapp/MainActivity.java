@@ -292,6 +292,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 floatingActionButton = findViewById(R.id.floatingActionButton);
 
+                if(!user.isEmailVerified()) {
+                    user.sendEmailVerification()
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        Log.d("TAG", "Email sent.");
+                                    }
+                                }
+                            });
+                }
+
                 if(user.getPhotoUrl() == null) {
                     floatingActionButton = findViewById(R.id.floatingActionButton);
                     floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
