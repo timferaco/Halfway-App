@@ -14,6 +14,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
@@ -33,6 +34,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -50,9 +52,12 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -64,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private RecyclerView mPlaceRecycler;
     private PlaceAdapter mPlaceAdapter;
+    private FloatingActionButton floatingActionButton;
 
     private ArrayList<PlaceCard> mPlaces;
     private OkHttpClient mHTTPClient;
@@ -138,6 +144,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         fetchUserLocations();
         refresh();
 
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user != null) {
+            floatingActionButton = findViewById(R.id.floatingActionButton);
+            Picasso.get().load(user.getPhotoUrl()).into(floatingActionButton);
+        } else {
+            // No user is signed in
+        }
+
 
 
     }
@@ -175,36 +189,48 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         switch(item.getItemId()) {
 
             case R.id.log_in:
-                //PopupDialog exampleDialog = new PopupDialog();
-                //exampleDialog.show(getSupportFragmentManager(), "exampleDialog");
-                List<AuthUI.IdpConfig> providers = Arrays.asList(
-                        new AuthUI.IdpConfig.EmailBuilder().build());
+                if (user == null) {
+                    //PopupDialog exampleDialog = new PopupDialog();
+                    //exampleDialog.show(getSupportFragmentManager(), "exampleDialog");
+                    List<AuthUI.IdpConfig> providers = Arrays.asList(
+                            new AuthUI.IdpConfig.EmailBuilder().build());
 
-                startActivityForResult(
-                        AuthUI.getInstance()
-                                .createSignInIntentBuilder()
-                                .setAvailableProviders(providers)
-                                .build(),
-                        RC_SIGN_IN);
+                    startActivityForResult(
+                            AuthUI.getInstance()
+                                    .createSignInIntentBuilder()
+                                    .setAvailableProviders(providers)
+                                    .build(),
+                            RC_SIGN_IN);
+                }
 
 
 
 
                 break;
             case R.id.log_out:
-                AuthUI.getInstance()
-                        .signOut(this)
-                        .addOnCompleteListener(new OnCompleteListener<Void>() {
-                            public void onComplete(@NonNull Task<Void> task) {
-                                // ...
-                            }
-                        });
+                if (user != null) {
+                    AuthUI.getInstance()
+                            .signOut(this)
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    // ...
+                                }
+                            });
+
+                    floatingActionButton = findViewById(R.id.floatingActionButton);
+                    floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
+                }
+
+
+
+
 
                 Log.d("TAG1", "");
                 break;
             case R.id.change_picture:
-               /* UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                        .setPhotoUri(Uri.parse("https://example.com/jane-q-user/profile.jpg"))
+                if (user != null) {
+               UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                        .setPhotoUri(Uri.parse("https://www.newzealand.com/assets/Tourism-NZ/Fiordland/1981c26c52/img-1536158664-5812-17824-722C5D30-9984-DC99-AF48D13DBA41C21E-v2__FocalPointCropWzQyNyw2NDAsNTUsNTAsODUsImpwZyIsNjUsMi41XQ.jpg"))
                         .build();
 
                 user.updateProfile(profileUpdates)
@@ -213,10 +239,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             public void onComplete(@NonNull Task<Void> task) {
                                 if (task.isSuccessful()) {
                                     Log.d("Updated", "User profile updated.");
+                                    floatingActionButton = findViewById(R.id.floatingActionButton);
+                                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                                    Picasso.get().load(user.getPhotoUrl()).into(floatingActionButton);
                                 }
                             }
                         });
-                */
+
+
+
+                } else {
+                    // No user is signed in
+                }
+
 
 
                 break;
@@ -230,6 +265,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 }
                             }
                         });
+
+                floatingActionButton = findViewById(R.id.floatingActionButton);
+                floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                 break;
             case R.id.chat:
                 //TODO: implement chat
@@ -238,6 +276,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             default:
                 return super.onOptionsItemSelected(item);
         }
+
         return true;
     }
 
@@ -251,7 +290,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             if (resultCode == RESULT_OK) {
                 // Successfully signed in
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                // ...
+                floatingActionButton = findViewById(R.id.floatingActionButton);
+
+                if(user.getPhotoUrl() == null) {
+                    floatingActionButton = findViewById(R.id.floatingActionButton);
+                    floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
+                } else {
+                    Picasso.get().load(user.getPhotoUrl()).into(floatingActionButton);
+                }
             } else {
                 // Sign in failed. If response is null the user canceled the
                 // sign-in flow using the back button. Otherwise check
