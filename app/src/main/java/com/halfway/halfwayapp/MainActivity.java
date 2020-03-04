@@ -231,6 +231,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                         });
                 break;
+            case R.id.chat:
+                //TODO: implement chat
+                break;
 
             default:
                 return super.onOptionsItemSelected(item);

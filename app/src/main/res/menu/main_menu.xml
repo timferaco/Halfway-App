@@ -14,4 +14,7 @@
     <item
         android:id="@+id/del_acct"
         android:title="Delete Account" />
+    <item
+        android:id="@+id/chat"
+        android:title="Chat" />
 </menu>
