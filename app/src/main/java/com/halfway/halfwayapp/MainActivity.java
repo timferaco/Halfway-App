@@ -16,6 +16,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -48,6 +49,7 @@ import android.widget.TextView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -168,8 +170,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
         switch(item.getItemId()) {
+
             case R.id.log_in:
                 //PopupDialog exampleDialog = new PopupDialog();
                 //exampleDialog.show(getSupportFragmentManager(), "exampleDialog");
@@ -188,13 +192,44 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 break;
             case R.id.log_out:
-                //TODO: implement logout
+                AuthUI.getInstance()
+                        .signOut(this)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            public void onComplete(@NonNull Task<Void> task) {
+                                // ...
+                            }
+                        });
+
+                Log.d("TAG1", "");
                 break;
             case R.id.change_picture:
-                //TODO: implement change picture
+               /* UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                        .setPhotoUri(Uri.parse("https://example.com/jane-q-user/profile.jpg"))
+                        .build();
+
+                user.updateProfile(profileUpdates)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    Log.d("Updated", "User profile updated.");
+                                }
+                            }
+                        });
+                */
+
+
                 break;
             case R.id.del_acct:
-                //TODO: implement delete account
+                user.delete()
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    Log.d("Deleted", "User account deleted.");
+                                }
+                            }
+                        });
                 break;
 
             default:
