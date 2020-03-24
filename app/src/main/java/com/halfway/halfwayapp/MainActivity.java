@@ -8,6 +8,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -26,6 +27,8 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.halfway.halfwayapp.MapRequestHelpers.TaskLoadedCallback;
 import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
+import com.squareup.picasso.Transformation;
 
 import androidx.appcompat.app.*;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -34,6 +37,12 @@ import androidx.recyclerview.widget.RecyclerView;
 
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -59,6 +68,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import de.hdodenhof.circleimageview.CircleImageView;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -147,9 +157,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             floatingActionButton = findViewById(R.id.floatingActionButton);
-            Picasso.get().load(user.getPhotoUrl()).into(floatingActionButton);
+
+            //floatingActionButton.setImageDrawable(CircleImageView Picasso.get().load(user.getPhotoUrl()));
+            Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
         } else {
-            // No user is signed in
+            //No user sign in
+            List<AuthUI.IdpConfig> providers = Arrays.asList(
+                    new AuthUI.IdpConfig.EmailBuilder().build());
+
+            startActivityForResult(
+                    AuthUI.getInstance()
+                            .createSignInIntentBuilder()
+                            .setAvailableProviders(providers)
+                            .build(),
+                    RC_SIGN_IN);
         }
 
 
@@ -230,7 +251,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             case R.id.change_picture:
                 if (user != null) {
                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                        .setPhotoUri(Uri.parse("https://www.newzealand.com/assets/Tourism-NZ/Fiordland/1981c26c52/img-1536158664-5812-17824-722C5D30-9984-DC99-AF48D13DBA41C21E-v2__FocalPointCropWzQyNyw2NDAsNTUsNTAsODUsImpwZyIsNjUsMi41XQ.jpg"))
+                        .setPhotoUri(Uri.parse("https://scontent.fbtv1-1.fna.fbcdn.net/v/t1.0-9/89479810_3141380202541907_1485885601528938496_n.jpg?_nc_cat=105&_nc_sid=85a577&_nc_ohc=G1R0P_w99B4AX9DekBD&_nc_ht=scontent.fbtv1-1.fna&oh=4a6866d67ca1d823bce5ccb5eed71d3f&oe=5E9F4557"))
                         .build();
 
                 user.updateProfile(profileUpdates)
@@ -241,7 +262,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     Log.d("Updated", "User profile updated.");
                                     floatingActionButton = findViewById(R.id.floatingActionButton);
                                     FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                                    Picasso.get().load(user.getPhotoUrl()).into(floatingActionButton);
+                                    Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
                                 }
                             }
                         });
@@ -308,7 +329,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     floatingActionButton = findViewById(R.id.floatingActionButton);
                     floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                 } else {
-                    Picasso.get().load(user.getPhotoUrl()).into(floatingActionButton);
+                    Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
                 }
             } else {
                 // Sign in failed. If response is null the user canceled the
@@ -511,6 +532,41 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return mPlaces.size();
         }
     }
+    //https://gist.github.com/julianshen/5829333
+    //Apache License
+    private class CircleTransform implements Transformation {
+        @Override
+        public Bitmap transform(Bitmap source) {
+            int size = Math.min(source.getWidth(), source.getHeight());
+
+            int x = (source.getWidth() - size) / 2;
+            int y = (source.getHeight() - size) / 2;
+
+            Bitmap squaredBitmap = Bitmap.createBitmap(source, x, y, size, size);
+            if (squaredBitmap != source) {
+                source.recycle();
+            }
+
+            Bitmap bitmap = Bitmap.createBitmap(size, size, source.getConfig());
+
+            Canvas canvas = new Canvas(bitmap);
+            Paint paint = new Paint();
+            BitmapShader shader = new BitmapShader(squaredBitmap, BitmapShader.TileMode.CLAMP, BitmapShader.TileMode.CLAMP);
+            paint.setShader(shader);
+            paint.setAntiAlias(true);
+
+            float r = size/2f;
+            canvas.drawCircle(r, r, r, paint);
+
+            squaredBitmap.recycle();
+            return bitmap;
+        }
+
+        @Override
+        public String key() {
+            return "circle";
+        }
+    }
 
     @Override
     public void onTaskDone(Object... values) {
@@ -518,6 +574,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             drawDir.remove();
         drawDir = mMap.addPolyline((PolylineOptions) values[0]);
     }
+
+
 
 
 
