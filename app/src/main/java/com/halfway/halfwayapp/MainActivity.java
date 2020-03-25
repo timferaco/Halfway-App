@@ -4,6 +4,8 @@ import androidx.annotation.*;
 
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -13,9 +15,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.gms.common.api.GoogleApi;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
@@ -44,6 +48,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.drawable.Drawable;
+import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -80,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private RecyclerView mPlaceRecycler;
     private PlaceAdapter mPlaceAdapter;
     private FloatingActionButton floatingActionButton;
+    private FusedLocationProviderClient fusedLocationClient;
 
     private ArrayList<PlaceCard> mPlaces;
     private OkHttpClient mHTTPClient;
@@ -113,6 +119,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mPlaceRecycler = (RecyclerView) findViewById(R.id.places_recycler);
         mPlaceRecycler.setLayoutManager(new LinearLayoutManager(this));
         mPlaceRecycler.setAdapter(mPlaceAdapter);
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
         mPlaceRecycler.addItemDecoration(itemDecor);
@@ -292,6 +300,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 break;
             case R.id.chat:
                 //TODO: implement chat
+                Log.d("LATLONG", "IN CHAT");
+                fusedLocationClient.getLastLocation()
+                        .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                            @Override
+                            public void onSuccess(Location location) {
+                                // Got last known location. In some rare situations this can be null.
+                                if (location != null) {
+                                    Log.d("LATLONG", String.valueOf(location.getLatitude()));
+                                    Log.d("LATLONG", String.valueOf(location.getLongitude()));
+                                }
+                                //Log.d("LATLONG", String.valueOf(location.getLatitude()));
+                                //Log.d("LATLONG", String.valueOf(location.getLongitude()));
+                            }
+                        });
+
+
+
                 break;
 
             default:
@@ -490,8 +515,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         public void bind(PlaceCard place) {
 
-            Picasso.get().load("https://maps.googleapis.com/maps/api/place/photo?" + place.getmIconURL() + "&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ").into(iv);
-
+            Picasso.get().load("https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=" + place.getmIconURL() + "&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ").into(iv);
+            Log.d("PLACEICONURL",  place.getmIconURL());
             title.setText(place.getmName());
             add.setText(place.getmAddress());
             cat.setText(place.getmCategory());
