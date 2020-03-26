@@ -99,6 +99,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     final private String MAPS_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json?&location=";
     final private String RESPONSE_TAG = "com.halfway.response";
     private static final int RC_SIGN_IN = 123;
+    private static final int PICK_IMAGE = 100;
 
 
     @Override
@@ -165,6 +166,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
             floatingActionButton = findViewById(R.id.floatingActionButton);
+
+            Log.d("PhotoURL1", user.getPhotoUrl().toString());
 
             //floatingActionButton.setImageDrawable(CircleImageView Picasso.get().load(user.getPhotoUrl()));
             Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
@@ -249,40 +252,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     floatingActionButton = findViewById(R.id.floatingActionButton);
                     floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                 }
-
-
-
-
-
                 Log.d("TAG1", "");
                 break;
             case R.id.change_picture:
                 if (user != null) {
-               UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                        .setPhotoUri(Uri.parse("https://scontent.fbtv1-1.fna.fbcdn.net/v/t1.0-9/89479810_3141380202541907_1485885601528938496_n.jpg?_nc_cat=105&_nc_sid=85a577&_nc_ohc=G1R0P_w99B4AX9DekBD&_nc_ht=scontent.fbtv1-1.fna&oh=4a6866d67ca1d823bce5ccb5eed71d3f&oe=5E9F4557"))
-                        .build();
-
-                user.updateProfile(profileUpdates)
-                        .addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                                if (task.isSuccessful()) {
-                                    Log.d("Updated", "User profile updated.");
-                                    floatingActionButton = findViewById(R.id.floatingActionButton);
-                                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                                    Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
-                                }
-                            }
-                        });
-
-
-
+                    openGallery();
                 } else {
                     // No user is signed in
                 }
-
-
-
                 break;
             case R.id.del_acct:
                 user.delete()
@@ -326,9 +303,42 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return true;
     }
 
+    private void openGallery() {
+        Intent gallery =
+                new Intent(Intent.ACTION_PICK,
+                        android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
+        startActivityForResult(gallery, PICK_IMAGE);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK && requestCode == PICK_IMAGE) {
+
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                    .setPhotoUri(data.getData())
+                    .build();
+
+
+            user.updateProfile(profileUpdates)
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                Log.d("Updated", "User profile updated.");
+                                floatingActionButton = findViewById(R.id.floatingActionButton);
+                                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                                Log.d("PhotoURL2", user.getPhotoUrl().toString());
+                                Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
+                            }
+                        }
+                    });
+            Log.d("PhotoURL3", user.getPhotoUrl().toString());
+            //Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
+        }
 
         if (requestCode == RC_SIGN_IN) {
             IdpResponse response = IdpResponse.fromResultIntent(data);
