@@ -1,17 +1,24 @@
 package com.halfway.halfwayapp;
 
 public class User {
-    private String userID;
     private String email;
+    private String photoURL;
 
-    public User(String ID, String emailAddress) {
-        userID = ID;
-        email = emailAddress;
+
+    public User(String email, String photoURL) {
+        this.email = email;
+        this.photoURL = photoURL;
     }
     public  User() {
-        userID = "null";
         email = "null";
+        photoURL = "null";
     }
 
+    public String getEmail() {
+        return email;
+    }
 
+    public String getPhotoURL() {
+        return photoURL;
+    }
 }
