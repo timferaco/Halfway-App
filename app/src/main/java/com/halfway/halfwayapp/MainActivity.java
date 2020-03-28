@@ -108,7 +108,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private ArrayList<PlaceCard> mPlaces;
     private ArrayList<RequestCard> mRequests;
-    private ArrayList<FriendCard> mFriends;
     private OkHttpClient mHTTPClient;
 
     DrawerLayout drawerLayout;
@@ -172,7 +171,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mPlaces = new ArrayList<PlaceCard>();
         mRequests = new ArrayList<RequestCard>();
-        mFriends = new ArrayList<FriendCard>();
         mHTTPClient = new OkHttpClient();
 
         View bottomSheet = findViewById(R.id.bottom_sheet);
@@ -473,25 +471,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    private void fetchFriends(){
 
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        db.collection("FriendsList").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        Log.d("DocumentSnapshot data! ", Objects.requireNonNull(document.get("email")).toString());
-                        mFriends.add(new FriendCard(document.get("email").toString(), document.get("photo").toString()));
-                    }
-
-                    Log.d("FriendsSize", String.valueOf(mFriends.size()));
-                } else {
-                    Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
-                }
-            }
-        });
-    }
 
     private void fetchUserLocations(){
         db.collection("UserLocation")
@@ -684,7 +664,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
     //https://gist.github.com/julianshen/5829333
     //Apache License
-    private class CircleTransform implements Transformation {
+    public static class CircleTransform implements Transformation {
         @Override
         public Bitmap transform(Bitmap source) {
             int size = Math.min(source.getWidth(), source.getHeight());

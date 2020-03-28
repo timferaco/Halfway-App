@@ -18,15 +18,24 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class FriendsListActivity extends AppCompatActivity {
 
     private RecyclerView mUserRecycler;
     private UserAdapter mUserAdapter;
-    private ArrayList<User> mUsers;
+    private static ArrayList<User> mUsers;
+    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,8 +48,39 @@ public class FriendsListActivity extends AppCompatActivity {
         mUserRecycler.setAdapter(mUserAdapter);
 
         mUsers = new ArrayList<User>();
+        db = FirebaseFirestore.getInstance();
+        Log.d("!!URL1", "Fetch Friends");
+        fetchFriends();
+
 
         mUserAdapter.notifyDataSetChanged();
+    }
+
+    private void fetchFriends(){
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        db.collection("FriendsList").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    ArrayList<User> tempUsers = new ArrayList<User>();
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        Log.d("DocumentSnapshot data! ", Objects.requireNonNull(document.get("email")).toString());
+                        Log.d("DocumentSnapshot data! ", Objects.requireNonNull(document.get("photo")).toString());
+                        User temp = new User(document.get("email").toString(), document.get("photo").toString());
+
+                        tempUsers.add(temp);
+                    }
+                    mUsers = tempUsers;
+                    Log.d("!!Size!", String.valueOf(mUsers.size()));
+                    mUserAdapter.notifyDataSetChanged();
+
+                } else {
+                    Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
+                }
+            }
+        });
+        Log.d("!!Size", String.valueOf(mUsers.size()));
     }
 
     private class UserHolder extends RecyclerView.ViewHolder {
@@ -57,8 +97,9 @@ public class FriendsListActivity extends AppCompatActivity {
 
         public void bind(User user) {
 
-            Picasso.get().load(user.getPhotoURL()).into(prof_pic);
-            Log.d("USERICONURL",  user.getPhotoURL());
+            Picasso.get().load(user.getPhotoURL()).transform(new MainActivity.CircleTransform()).into(prof_pic);
+            Log.d("!!URL1", user.getEmail());
+            Log.d("!!URL", user.getPhotoURL().toString());
             u_email.setText(user.getEmail());
             req_but.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -75,7 +116,7 @@ public class FriendsListActivity extends AppCompatActivity {
         @Override
         public FriendsListActivity.UserHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             LayoutInflater li = LayoutInflater.from(getApplicationContext());
-            return new FriendsListActivity.UserHolder(li.inflate(R.layout.places_cell, parent, false));
+            return new FriendsListActivity.UserHolder(li.inflate(R.layout.friends_cell, parent, false));
         }
 
         @Override

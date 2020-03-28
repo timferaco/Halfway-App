@@ -1,5 +1,7 @@
 package com.halfway.halfwayapp;
 
+import android.net.Uri;
+
 public class User {
     private String email;
     private String photoURL;
@@ -11,7 +13,7 @@ public class User {
     }
     public  User() {
         email = "null";
-        photoURL = "null";
+        photoURL = null;
     }
 
     public String getEmail() {
