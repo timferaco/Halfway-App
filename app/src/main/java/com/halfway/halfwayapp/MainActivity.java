@@ -321,6 +321,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 }
                             }
                         });
+                //Launch log in activity
+                List<AuthUI.IdpConfig> providers = Arrays.asList(
+                        new AuthUI.IdpConfig.EmailBuilder().build());
+
+                startActivityForResult(
+                        AuthUI.getInstance()
+                                .createSignInIntentBuilder()
+                                .setAvailableProviders(providers)
+                                .build(),
+                        RC_SIGN_IN);
 
                 floatingActionButton = findViewById(R.id.floatingActionButton);
                 floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
@@ -395,6 +405,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                         }
                     });
+            //Log.d("PhotoURL3", user.getPhotoUrl().toString());
             //Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
         }
 
