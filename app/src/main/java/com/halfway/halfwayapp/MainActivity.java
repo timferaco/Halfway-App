@@ -141,7 +141,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        navigationView.setNavigationItemSelectedListener(this);
+        //navigationView.setActivated(true);
+        navigationView.bringToFront();
+        navigationView.setNavigationItemSelectedListener(MainActivity.this);
+
 
 
         // Get the SupportMapFragment and register for the callback
@@ -250,20 +253,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         switch (menuItem.getItemId()){
             case R.id.log_in:
                 Toast test = new Toast(this);
-                test.makeText(MainActivity.this, "Log In", Toast.LENGTH_SHORT).setGravity(Gravity.TOP, 0, 0);
-                test.show();
+                test.makeText(MainActivity.this, "Log In", Toast.LENGTH_SHORT).show();
                 Log.d("LOGIN", "onNavigationItemSelected: log in");
                 break;
             case R.id.log_out:
-                Toast.makeText(MainActivity.this, "Contact us Selected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Log Out Selected", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.change_picture:
-                Toast.makeText(MainActivity.this, "About us Selected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Change Picture Selected", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.del_acct:
-                Toast.makeText(MainActivity.this, "Logout Selected", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Delete Account Selected", Toast.LENGTH_SHORT).show();
                 break;
+            case R.id.chat:
+                Toast.makeText(MainActivity.this, "Chat Selected", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.friends:
+                break;
+
             default:
+                Toast.makeText(MainActivity.this, "Default", Toast.LENGTH_SHORT).show();
                 break;
         }
         return false;

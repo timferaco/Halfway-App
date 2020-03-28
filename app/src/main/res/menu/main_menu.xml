@@ -2,19 +2,22 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/log_in"
-        android:title="Log In"
-        app:showAsAction="always" />
+        android:id="@+id/friends"
+        android:title="Friends" />
+    <item
+        android:id="@+id/chat"
+        android:title="Chat" />
     <item
         android:id="@+id/change_picture"
         android:title="Change Picture" />
+    <item
+        android:id="@+id/log_in"
+        android:title="Log In"
+        app:showAsAction="always" />
     <item
         android:id="@+id/log_out"
         android:title="Log Out" />
     <item
         android:id="@+id/del_acct"
         android:title="Delete Account" />
-    <item
-        android:id="@+id/chat"
-        android:title="Chat" />
 </menu>
