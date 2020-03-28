@@ -304,22 +304,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 break;
             case R.id.change_picture:
                 if (user != null) {
-                    UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                            .setPhotoUri(Uri.parse("https://scontent.fbtv1-1.fna.fbcdn.net/v/t1.0-9/89479810_3141380202541907_1485885601528938496_n.jpg?_nc_cat=105&_nc_sid=85a577&_nc_ohc=G1R0P_w99B4AX9DekBD&_nc_ht=scontent.fbtv1-1.fna&oh=4a6866d67ca1d823bce5ccb5eed71d3f&oe=5E9F4557"))
-                            .build();
-
-                    user.updateProfile(profileUpdates)
-                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        Log.d("Updated", "User profile updated.");
-                                        floatingActionButton = findViewById(R.id.floatingActionButton);
-                                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                                        Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
-                                    }
-                                }
-                            });
+                    openGallery();
                 } else {
                     // No user is signed in
                 }
@@ -399,9 +384,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             if (task.isSuccessful()) {
                                 Log.d("Updated", "User profile updated.");
                                 floatingActionButton = findViewById(R.id.floatingActionButton);
+                                prof_picture = findViewById(R.id.profilePic);
                                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                                 Log.d("PhotoURL2", user.getPhotoUrl().toString());
+                                Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(prof_picture);
                                 Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
+
                             }
                         }
                     });
