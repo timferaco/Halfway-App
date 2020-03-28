@@ -23,6 +23,7 @@ import com.google.android.gms.common.api.GoogleApi;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -70,7 +71,9 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -88,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FusedLocationProviderClient fusedLocationClient;
 
     private ArrayList<PlaceCard> mPlaces;
+    private ArrayList<RequestCard> mRequests;
     private OkHttpClient mHTTPClient;
 
     private FirebaseFirestore db;
@@ -127,6 +131,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mPlaceRecycler.addItemDecoration(itemDecor);
 
         mPlaces = new ArrayList<PlaceCard>();
+        mRequests = new ArrayList<RequestCard>();
         mHTTPClient = new OkHttpClient();
 
         View bottomSheet = findViewById(R.id.bottom_sheet);
@@ -277,8 +282,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 break;
             case R.id.chat:
                 //TODO: implement chat
+
+                //fetchFriends();
+
+
+
                 Log.d("LATLONG", "IN CHAT");
-                fusedLocationClient.getLastLocation()
+                GeoPoint geo = new GeoPoint(44.468015, -73.215069);
+                addRequests("423534sdg34sfgsg4", geo);
+                fetchRequests();
+
+                Log.d("REQUESTS SIZE1", Integer.toString(mRequests.size()));
+
+                /*fusedLocationClient.getLastLocation()
                         .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                             @Override
                             public void onSuccess(Location location) {
@@ -291,6 +307,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 //Log.d("LATLONG", String.valueOf(location.getLongitude()));
                             }
                         });
+
+                 */
+
+
 
 
 
@@ -396,6 +416,52 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return url;
     }
 
+    private void fetchRequests() {
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        db.collection("Users").document(user.getIdToken(false).toString()).collection("Requests").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    ArrayList<RequestCard> temp = new ArrayList<>();
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+
+                        GeoPoint primaryUserLocation = (GeoPoint) document.get("primaryUserLocation");
+                        GeoPoint secondaryUserLocation = (GeoPoint) document.get("secondaryUserLocation");
+                        String primaryUserID = (String) document.get("primaryUid");
+                        String secondaryUserID = (String) document.get("secondaryUid");
+                        GeoPoint midpoint = (GeoPoint) document.get("midpointLocation");
+
+                        temp.add(new RequestCard(primaryUserID, primaryUserLocation, secondaryUserID, secondaryUserLocation, midpoint));
+                    }
+                    Log.d("REQUESTS SIZE", Integer.toString(mRequests.size()));
+                    mRequests = temp;
+                } else {
+                    Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
+                }
+            }
+        });
+
+    }
+
+    private void fetchFriends(){
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        Log.d("UIDDDDDDD", FirebaseAuth.getInstance().getUid());
+        db.collection("Users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        Log.d("DocumentSnapshot data! ", "");
+                    }
+                } else {
+                    Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
+                }
+            }
+        });
+    }
+
     private void fetchUserLocations(){
         db.collection("UserLocation")
                 .get()
@@ -435,8 +501,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-
-
     }
 
     private class RefreshTask extends AsyncTask<Void, Void, String> {
@@ -463,6 +527,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             parseJSON(result);
 
         }
+    }
+
+
+    void addRequests(String secondaryUserID, GeoPoint userLocation) {
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        CollectionReference requests = db.collection("Users");
+
+        DocumentReference doc = requests.document(user.getIdToken(false).toString());
+        CollectionReference requestsDocs = doc.collection("Requests");
+
+        Map<String, Object> request1 = new HashMap<>();
+        request1.put("primaryUserLocation", userLocation);
+        request1.put("primaryUid", user.getUid());
+        request1.put("secondaryUserLocation", null);
+        request1.put("secondaryUid", secondaryUserID);
+        request1.put("midpointLocation", null);
+        requestsDocs.document().set(request1);
+
+
     }
 
     private void refresh() {
