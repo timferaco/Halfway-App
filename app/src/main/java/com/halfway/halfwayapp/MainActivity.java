@@ -428,10 +428,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
 
                 if(user.getPhotoUrl() == null) {
+
                     floatingActionButton = findViewById(R.id.floatingActionButton);
                     floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                 } else {
-                    Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
+                    Picasso.get().load("https://scontent.fbtv1-1.fna.fbcdn.net/v/t31.0-8/s960x960/10679591_648893885224134_7166029734996188708_o.jpg?_nc_cat=110&_nc_sid=da1649&_nc_ohc=ioKCYq4xVOUAX9q5rm4&_nc_ht=scontent.fbtv1-1.fna&_nc_tp=7&oh=f4fc4628684bad08b6e2f8c41890816f&oe=5EA64EB2").transform(new CircleTransform()).into(floatingActionButton);
                 }
             } else {
                 // Sign in failed. If response is null the user canceled the
