@@ -19,8 +19,8 @@
         app:menu="@menu/main_menu"
         android:background="#FFFFFF"
         android:layout_gravity="start"
-        app:itemTextColor="#000000"/>
-    <!--app:headerLayout="@layout/header"-->
+        app:itemTextColor="#000000"
+        app:headerLayout="@layout/header"/>
 
 
     <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"

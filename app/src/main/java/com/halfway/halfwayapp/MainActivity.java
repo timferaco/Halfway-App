@@ -261,21 +261,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         switch (menuItem.getItemId()){
-            case R.id.log_in:
-                if (user == null) {
-                    //PopupDialog exampleDialog = new PopupDialog();
-                    //exampleDialog.show(getSupportFragmentManager(), "exampleDialog");
-                    List<AuthUI.IdpConfig> providers = Arrays.asList(
-                            new AuthUI.IdpConfig.EmailBuilder().build());
-
-                    startActivityForResult(
-                            AuthUI.getInstance()
-                                    .createSignInIntentBuilder()
-                                    .setAvailableProviders(providers)
-                                    .build(),
-                            RC_SIGN_IN);
-                }
-                break;
             case R.id.log_out:
                 if (user != null) {
                     AuthUI.getInstance()
@@ -288,6 +273,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                     floatingActionButton = findViewById(R.id.floatingActionButton);
                     floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
+
+                    //Launch log in activity
+                    List<AuthUI.IdpConfig> providers = Arrays.asList(
+                            new AuthUI.IdpConfig.EmailBuilder().build());
+
+                    startActivityForResult(
+                            AuthUI.getInstance()
+                                    .createSignInIntentBuilder()
+                                    .setAvailableProviders(providers)
+                                    .build(),
+                            RC_SIGN_IN);
                 }
                 break;
             case R.id.change_picture:
@@ -354,7 +350,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         return false;
     }
-    
+
 
     private void openGallery() {
         Intent gallery =
