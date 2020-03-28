@@ -250,23 +250,89 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         switch (menuItem.getItemId()){
             case R.id.log_in:
-                Toast test = new Toast(this);
-                test.makeText(MainActivity.this, "Log In", Toast.LENGTH_SHORT).show();
-                Log.d("LOGIN", "onNavigationItemSelected: log in");
+                if (user == null) {
+                    //PopupDialog exampleDialog = new PopupDialog();
+                    //exampleDialog.show(getSupportFragmentManager(), "exampleDialog");
+                    List<AuthUI.IdpConfig> providers = Arrays.asList(
+                            new AuthUI.IdpConfig.EmailBuilder().build());
+
+                    startActivityForResult(
+                            AuthUI.getInstance()
+                                    .createSignInIntentBuilder()
+                                    .setAvailableProviders(providers)
+                                    .build(),
+                            RC_SIGN_IN);
+                }
                 break;
             case R.id.log_out:
-                Toast.makeText(MainActivity.this, "Log Out Selected", Toast.LENGTH_SHORT).show();
+                if (user != null) {
+                    AuthUI.getInstance()
+                            .signOut(this)
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    // ...
+                                }
+                            });
+
+                    floatingActionButton = findViewById(R.id.floatingActionButton);
+                    floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
+                }
                 break;
             case R.id.change_picture:
-                Toast.makeText(MainActivity.this, "Change Picture Selected", Toast.LENGTH_SHORT).show();
+                if (user != null) {
+                    UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                            .setPhotoUri(Uri.parse("https://scontent.fbtv1-1.fna.fbcdn.net/v/t1.0-9/89479810_3141380202541907_1485885601528938496_n.jpg?_nc_cat=105&_nc_sid=85a577&_nc_ohc=G1R0P_w99B4AX9DekBD&_nc_ht=scontent.fbtv1-1.fna&oh=4a6866d67ca1d823bce5ccb5eed71d3f&oe=5E9F4557"))
+                            .build();
+
+                    user.updateProfile(profileUpdates)
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        Log.d("Updated", "User profile updated.");
+                                        floatingActionButton = findViewById(R.id.floatingActionButton);
+                                        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                                        Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
+                                    }
+                                }
+                            });
+                } else {
+                    // No user is signed in
+                }
                 break;
             case R.id.del_acct:
-                Toast.makeText(MainActivity.this, "Delete Account Selected", Toast.LENGTH_SHORT).show();
+                user.delete()
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    Log.d("Deleted", "User account deleted.");
+                                }
+                            }
+                        });
+
+                floatingActionButton = findViewById(R.id.floatingActionButton);
+                floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                 break;
             case R.id.chat:
-                Toast.makeText(MainActivity.this, "Chat Selected", Toast.LENGTH_SHORT).show();
+                //TODO: implement chat
+                Log.d("LATLONG", "IN CHAT");
+                fusedLocationClient.getLastLocation()
+                        .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                            @Override
+                            public void onSuccess(Location location) {
+                                // Got last known location. In some rare situations this can be null.
+                                if (location != null) {
+                                    Log.d("LATLONG", String.valueOf(location.getLatitude()));
+                                    Log.d("LATLONG", String.valueOf(location.getLongitude()));
+                                }
+                                //Log.d("LATLONG", String.valueOf(location.getLatitude()));
+                                //Log.d("LATLONG", String.valueOf(location.getLongitude()));
+                            }
+                        });
                 break;
             case R.id.friends:
                 Intent launchFriends = new Intent(this, FriendsListActivity.class);
