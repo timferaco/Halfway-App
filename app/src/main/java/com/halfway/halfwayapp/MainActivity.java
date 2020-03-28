@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private ArrayList<PlaceCard> mPlaces;
     private ArrayList<RequestCard> mRequests;
-    private ArrayList<FriendCard> mFriends;
+    private ArrayList<User> mFriends;
     private OkHttpClient mHTTPClient;
 
     private FirebaseFirestore db;
@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mPlaces = new ArrayList<PlaceCard>();
         mRequests = new ArrayList<RequestCard>();
-        mFriends = new ArrayList<FriendCard>();
+        mFriends = new ArrayList<User>();
         mHTTPClient = new OkHttpClient();
 
         View bottomSheet = findViewById(R.id.bottom_sheet);
@@ -452,7 +452,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 if (task.isSuccessful()) {
                     for (QueryDocumentSnapshot document : task.getResult()) {
                         Log.d("DocumentSnapshot data! ", Objects.requireNonNull(document.get("email")).toString());
-                        mFriends.add(new FriendCard(document.get("email").toString(), document.get("photo").toString()));
+                        mFriends.add(new User(document.get("email").toString(), document.get("photo").toString()));
                     }
 
                     Log.d("FriendsSize", String.valueOf(mFriends.size()));

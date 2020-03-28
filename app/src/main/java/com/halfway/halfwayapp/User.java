@@ -1,15 +1,26 @@
 package com.halfway.halfwayapp;
 
-public class User {
-    private String userID;
-    private String email;
+import android.net.Uri;
 
-    public User(String ID, String emailAddress) {
-        userID = ID;
-        email = emailAddress;
+public class User {
+    String email;
+    Uri photo;
+
+    User(String mEmail, String uri){
+        email = mEmail;
+        photo = Uri.parse(uri);
+
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public Uri getPhoto() {
+        return photo;
     }
     public  User() {
-        userID = "null";
+        email = "null";
         email = "null";
     }
 
