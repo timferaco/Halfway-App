@@ -35,6 +35,7 @@ import com.squareup.picasso.Target;
 import com.squareup.picasso.Transformation;
 
 import androidx.appcompat.app.*;
+import androidx.core.view.GravityCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -53,6 +54,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -78,7 +80,21 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, TaskLoadedCallback {
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.drawerlayout.widget.DrawerLayout;
+
+import android.os.Bundle;
+import android.view.MenuItem;
+import android.widget.Toast;
+import android.widget.ToggleButton;
+
+import com.google.android.material.navigation.NavigationView;
+
+
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, TaskLoadedCallback, NavigationView.OnNavigationItemSelectedListener {
     private BottomSheetBehavior mBottomSheetBehavior;
     private TextView mTextViewState;
 
@@ -89,6 +105,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private ArrayList<PlaceCard> mPlaces;
     private OkHttpClient mHTTPClient;
+
+    DrawerLayout drawerLayout;
+    NavigationView navigationView;
 
     private FirebaseFirestore db;
     private GoogleMap mMap;
@@ -107,6 +126,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         setContentView(R.layout.activity_main);
         db = FirebaseFirestore.getInstance();
         latlngs = new ArrayList<>();
+
+        drawerLayout = findViewById(R.id.drawer);
+        navigationView = findViewById(R.id.navigationView);
+        //setSupportActionBar(toolbar);
+        //getSupportActionBar().setDefaultDisplayHomeAsUpEnabled(true);
+        //getSupportActionBar().setDisplayShowTitleEnabled(false);
+        floatingActionButton = findViewById(R.id.floatingActionButton);
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawerLayout.openDrawer(GravityCompat.START);
+                Log.d("DRAWER", "onClick: Open Drawer");
+            }
+        });
+
+        //navigationView.setActivated(true);
+        navigationView.bringToFront();
+        navigationView.setNavigationItemSelectedListener(MainActivity.this);
+
+
 
         // Get the SupportMapFragment and register for the callback
         // when the map is ready for use.
@@ -164,8 +203,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
-            floatingActionButton = findViewById(R.id.floatingActionButton);
-
             //floatingActionButton.setImageDrawable(CircleImageView Picasso.get().load(user.getPhotoUrl()));
             Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
         } else {
@@ -192,12 +229,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    @Override
+    /*@Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the main_menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main_menu, menu);
         return true;
-    }
+    }*/
 
     /**
      * Manipulates the map when it's available.
@@ -212,6 +249,36 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+        switch (menuItem.getItemId()){
+            case R.id.log_in:
+                Toast test = new Toast(this);
+                test.makeText(MainActivity.this, "Log In", Toast.LENGTH_SHORT).show();
+                Log.d("LOGIN", "onNavigationItemSelected: log in");
+                break;
+            case R.id.log_out:
+                Toast.makeText(MainActivity.this, "Log Out Selected", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.change_picture:
+                Toast.makeText(MainActivity.this, "Change Picture Selected", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.del_acct:
+                Toast.makeText(MainActivity.this, "Delete Account Selected", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.chat:
+                Toast.makeText(MainActivity.this, "Chat Selected", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.friends:
+                break;
+
+            default:
+                Toast.makeText(MainActivity.this, "Default", Toast.LENGTH_SHORT).show();
+                break;
+        }
+        return false;
+    }
+
+    /*@Override
     public boolean onOptionsItemSelected(MenuItem item) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
@@ -324,7 +391,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         return true;
-    }
+    }*/
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
