@@ -320,6 +320,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 floatingActionButton = findViewById(R.id.floatingActionButton);
                 floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                 break;
+            case R.id.requests:
+                Intent launchReqs = new Intent(this, RequestsActivity.class);
+                startActivity(launchReqs);
+                break;
             case R.id.chat:
                 //TODO: implement chat
                 Log.d("LATLONG", "IN CHAT");

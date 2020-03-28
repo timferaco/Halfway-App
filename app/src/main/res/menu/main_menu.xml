@@ -13,6 +13,10 @@
         android:id="@+id/change_picture"
         android:icon="@drawable/ic_crop_original_black_24dp"
         android:title="Change Picture" />
+    <item
+        android:id="@+id/requests"
+        android:icon="@drawable/ic_send_black_24dp"
+        android:title="Requests" />
     <group
         android:id="@+id/acct_actions"
         android:menuCategory="container"
