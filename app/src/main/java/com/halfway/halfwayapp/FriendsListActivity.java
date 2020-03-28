@@ -34,7 +34,7 @@ public class FriendsListActivity extends AppCompatActivity {
 
     private RecyclerView mUserRecycler;
     private UserAdapter mUserAdapter;
-    private ArrayList<User> mUsers;
+    private static ArrayList<User> mUsers;
     private FirebaseFirestore db;
 
     @Override
@@ -73,7 +73,7 @@ public class FriendsListActivity extends AppCompatActivity {
                     }
                     mUsers = tempUsers;
                     Log.d("!!Size!", String.valueOf(mUsers.size()));
-                    //mUserAdapter.notifyDataSetChanged();
+                    mUserAdapter.notifyDataSetChanged();
 
                 } else {
                     Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
@@ -97,7 +97,7 @@ public class FriendsListActivity extends AppCompatActivity {
 
         public void bind(User user) {
 
-            //Picasso.get().load(user.getPhotoURL()).transform(new MainActivity.CircleTransform()).into(prof_pic);
+            Picasso.get().load(user.getPhotoURL()).transform(new MainActivity.CircleTransform()).into(prof_pic);
             Log.d("!!URL1", user.getEmail());
             Log.d("!!URL", user.getPhotoURL().toString());
             u_email.setText(user.getEmail());
@@ -116,7 +116,7 @@ public class FriendsListActivity extends AppCompatActivity {
         @Override
         public FriendsListActivity.UserHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             LayoutInflater li = LayoutInflater.from(getApplicationContext());
-            return new FriendsListActivity.UserHolder(li.inflate(R.layout.places_cell, parent, false));
+            return new FriendsListActivity.UserHolder(li.inflate(R.layout.friends_cell, parent, false));
         }
 
         @Override
