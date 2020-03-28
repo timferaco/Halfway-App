@@ -67,6 +67,7 @@ import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -110,6 +111,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private ArrayList<RequestCard> mRequests;
     private OkHttpClient mHTTPClient;
 
+    private TextView prof_email;
+    private TextView prof_display_name;
+    private CircleImageView prof_picture;
+
     DrawerLayout drawerLayout;
     NavigationView navigationView;
 
@@ -143,6 +148,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onClick(View v) {
                 drawerLayout.openDrawer(GravityCompat.START);
                 Log.d("DRAWER", "onClick: Open Drawer");
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if (user != null) {
+                    prof_email = findViewById(R.id.prof_email);
+                    prof_display_name = findViewById(R.id.prof_disp_name);
+                    prof_picture = findViewById(R.id.profilePic);
+                    Log.d("!!EMAIL", user.getEmail());
+
+                    prof_email.setText(user.getEmail());
+                    prof_display_name.setText(user.getDisplayName());
+
+                    Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(prof_picture);
+                }
             }
         });
 
@@ -204,6 +221,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //mTextViewState.setText("Sliding...");
             }
         });
+
+
         fetchUserLocations();
         refresh();
 
@@ -211,7 +230,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         if (user != null) {
             floatingActionButton = findViewById(R.id.floatingActionButton);
 
-            Log.d("PhotoURL1", user.getPhotoUrl().toString());
 
             //floatingActionButton.setImageDrawable(CircleImageView Picasso.get().load(user.getPhotoUrl()));
             Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
