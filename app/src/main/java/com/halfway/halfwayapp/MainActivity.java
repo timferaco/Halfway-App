@@ -23,6 +23,7 @@ import com.google.android.gms.common.api.GoogleApi;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -72,7 +73,9 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -104,6 +107,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private FusedLocationProviderClient fusedLocationClient;
 
     private ArrayList<PlaceCard> mPlaces;
+    private ArrayList<RequestCard> mRequests;
+    private ArrayList<FriendCard> mFriends;
     private OkHttpClient mHTTPClient;
 
     DrawerLayout drawerLayout;
@@ -118,6 +123,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     final private String MAPS_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json?&location=";
     final private String RESPONSE_TAG = "com.halfway.response";
     private static final int RC_SIGN_IN = 123;
+    private static final int PICK_IMAGE = 100;
 
 
     @Override
@@ -165,6 +171,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mPlaceRecycler.addItemDecoration(itemDecor);
 
         mPlaces = new ArrayList<PlaceCard>();
+        mRequests = new ArrayList<RequestCard>();
+        mFriends = new ArrayList<FriendCard>();
         mHTTPClient = new OkHttpClient();
 
         View bottomSheet = findViewById(R.id.bottom_sheet);
@@ -203,6 +211,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user != null) {
+            floatingActionButton = findViewById(R.id.floatingActionButton);
+
+            Log.d("PhotoURL1", user.getPhotoUrl().toString());
+
             //floatingActionButton.setImageDrawable(CircleImageView Picasso.get().load(user.getPhotoUrl()));
             Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
         } else {
@@ -217,9 +229,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             .build(),
                     RC_SIGN_IN);
         }
-
-
-
     }
 
     public void grabMidpoint(){
@@ -384,40 +393,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     floatingActionButton = findViewById(R.id.floatingActionButton);
                     floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                 }
-
-
-
-
-
                 Log.d("TAG1", "");
                 break;
             case R.id.change_picture:
                 if (user != null) {
-               UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                        .setPhotoUri(Uri.parse("https://scontent.fbtv1-1.fna.fbcdn.net/v/t1.0-9/89479810_3141380202541907_1485885601528938496_n.jpg?_nc_cat=105&_nc_sid=85a577&_nc_ohc=G1R0P_w99B4AX9DekBD&_nc_ht=scontent.fbtv1-1.fna&oh=4a6866d67ca1d823bce5ccb5eed71d3f&oe=5E9F4557"))
-                        .build();
-
-                user.updateProfile(profileUpdates)
-                        .addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                                if (task.isSuccessful()) {
-                                    Log.d("Updated", "User profile updated.");
-                                    floatingActionButton = findViewById(R.id.floatingActionButton);
-                                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                                    Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
-                                }
-                            }
-                        });
-
-
-
+                    openGallery();
                 } else {
                     // No user is signed in
                 }
-
-
-
                 break;
             case R.id.del_acct:
                 user.delete()
@@ -435,8 +418,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 break;
             case R.id.chat:
                 //TODO: implement chat
-                Log.d("LATLONG", "IN CHAT");
-                fusedLocationClient.getLastLocation()
+
+                fetchFriends();
+
+
+
+                /*Log.d("LATLONG", "IN CHAT");
+                GeoPoint geo = new GeoPoint(44.468015, -73.215069);
+                addRequests("423534sdg34sfgsg4", geo);
+                fetchRequests();*/
+
+                Log.d("REQUESTS SIZE1", Integer.toString(mRequests.size()));
+
+                /*fusedLocationClient.getLastLocation()
                         .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                             @Override
                             public void onSuccess(Location location) {
@@ -450,6 +444,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                         });
 
+                 */
+
+
+
 
 
                 break;
@@ -461,9 +459,42 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return true;
     }*/
 
+    private void openGallery() {
+        Intent gallery =
+                new Intent(Intent.ACTION_PICK,
+                        android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
+        startActivityForResult(gallery, PICK_IMAGE);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == RESULT_OK && requestCode == PICK_IMAGE) {
+
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                    .setPhotoUri(data.getData())
+                    .build();
+
+
+            user.updateProfile(profileUpdates)
+                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()) {
+                                Log.d("Updated", "User profile updated.");
+                                floatingActionButton = findViewById(R.id.floatingActionButton);
+                                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                                Log.d("PhotoURL2", user.getPhotoUrl().toString());
+                                Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
+                            }
+                        }
+                    });
+            Log.d("PhotoURL3", user.getPhotoUrl().toString());
+            //Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
+        }
 
         if (requestCode == RC_SIGN_IN) {
             IdpResponse response = IdpResponse.fromResultIntent(data);
@@ -521,6 +552,54 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return url;
     }
 
+    private void fetchRequests() {
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        db.collection("Users").document(user.getIdToken(false).toString()).collection("Requests").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    ArrayList<RequestCard> temp = new ArrayList<>();
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+
+                        GeoPoint primaryUserLocation = (GeoPoint) document.get("primaryUserLocation");
+                        GeoPoint secondaryUserLocation = (GeoPoint) document.get("secondaryUserLocation");
+                        String primaryUserID = (String) document.get("primaryUid");
+                        String secondaryUserID = (String) document.get("secondaryUid");
+                        GeoPoint midpoint = (GeoPoint) document.get("midpointLocation");
+
+                        temp.add(new RequestCard(primaryUserID, primaryUserLocation, secondaryUserID, secondaryUserLocation, midpoint));
+                    }
+                    Log.d("REQUESTS SIZE", Integer.toString(mRequests.size()));
+                    mRequests = temp;
+                } else {
+                    Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
+                }
+            }
+        });
+
+    }
+
+    private void fetchFriends(){
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        db.collection("FriendsList").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+                        Log.d("DocumentSnapshot data! ", Objects.requireNonNull(document.get("email")).toString());
+                        mFriends.add(new FriendCard(document.get("email").toString(), document.get("photo").toString()));
+                    }
+
+                    Log.d("FriendsSize", String.valueOf(mFriends.size()));
+                } else {
+                    Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
+                }
+            }
+        });
+    }
+
     private void fetchUserLocations(){
         db.collection("UserLocation")
                 .get()
@@ -560,8 +639,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-
-
     }
 
     private class RefreshTask extends AsyncTask<Void, Void, String> {
@@ -588,6 +665,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             parseJSON(result);
 
         }
+    }
+
+
+    void addRequests(String secondaryUserID, GeoPoint userLocation) {
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        CollectionReference requests = db.collection("Users");
+
+        DocumentReference doc = requests.document(user.getIdToken(false).toString());
+        CollectionReference requestsDocs = doc.collection("Requests");
+
+        Map<String, Object> request1 = new HashMap<>();
+        request1.put("primaryUserLocation", userLocation);
+        request1.put("primaryUid", user.getUid());
+        request1.put("secondaryUserLocation", null);
+        request1.put("secondaryUid", secondaryUserID);
+        request1.put("midpointLocation", null);
+        requestsDocs.document().set(request1);
+
+
     }
 
     private void refresh() {
