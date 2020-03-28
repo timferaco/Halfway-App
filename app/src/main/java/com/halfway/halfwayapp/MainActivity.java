@@ -227,6 +227,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         refresh();
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
         if (user != null) {
             floatingActionButton = findViewById(R.id.floatingActionButton);
 
@@ -305,6 +306,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             case R.id.change_picture:
                 if (user != null) {
                     openGallery();
+                    //https://scontent.fbtv1-1.fna.fbcdn.net/v/t31.0-8/s960x960/10679591_648893885224134_7166029734996188708_o.jpg?_nc_cat=110&_nc_sid=da1649&_nc_ohc=ioKCYq4xVOUAX9q5rm4&_nc_ht=scontent.fbtv1-1.fna&_nc_tp=7&oh=f4fc4628684bad08b6e2f8c41890816f&oe=5EA64EB2
                 } else {
                     // No user is signed in
                 }
@@ -373,7 +375,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
             UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                    .setPhotoUri(data.getData())
+                    .setPhotoUri(Uri.parse("https://scontent.fbtv1-1.fna.fbcdn.net/v/t31.0-8/s960x960/10679591_648893885224134_7166029734996188708_o.jpg?_nc_cat=110&_nc_sid=da1649&_nc_ohc=ioKCYq4xVOUAX9q5rm4&_nc_ht=scontent.fbtv1-1.fna&_nc_tp=7&oh=f4fc4628684bad08b6e2f8c41890816f&oe=5EA64EB2"))
                     .build();
 
 
