@@ -2,6 +2,7 @@ package com.halfway.halfwayapp;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -52,6 +53,9 @@ public class FriendsListActivity extends AppCompatActivity {
         Log.d("!!URL1", "Fetch Friends");
         fetchFriends();
 
+        DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
+        mUserRecycler.addItemDecoration(itemDecor);
+
 
         mUserAdapter.notifyDataSetChanged();
     }
@@ -97,7 +101,7 @@ public class FriendsListActivity extends AppCompatActivity {
 
         public void bind(User user) {
 
-            Picasso.get().load(user.getPhotoURL()).transform(new MainActivity.CircleTransform()).into(prof_pic);
+            Picasso.get().load(user.getPhotoURL()).into(prof_pic);
             Log.d("!!URL1", user.getEmail());
             Log.d("!!URL", user.getPhotoURL().toString());
             u_email.setText(user.getEmail());
