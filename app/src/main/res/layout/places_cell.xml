@@ -8,7 +8,7 @@
     android:layout_marginBottom="15dp">
 
     <ImageView
-        android:id="@+id/usr_img"
+        android:id="@+id/place_img"
         android:layout_width="254dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
@@ -22,7 +22,7 @@
         android:paddingLeft="5dp">
 
         <TextView
-            android:id="@+id/user_email"
+            android:id="@+id/place_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TextView"
@@ -31,7 +31,7 @@
             android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/user_uuid"
+            android:id="@+id/place_address"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="TextView"
@@ -46,7 +46,7 @@
             android:textSize="14sp" />
 
         <Button
-            android:id="@+id/req_button"
+            android:id="@+id/button"
             android:layout_width="102dp"
             android:layout_height="wrap_content"
             android:layout_gravity="left"

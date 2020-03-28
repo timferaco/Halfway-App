@@ -269,6 +269,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Toast.makeText(MainActivity.this, "Chat Selected", Toast.LENGTH_SHORT).show();
                 break;
             case R.id.friends:
+                Intent launchFriends = new Intent(this, FriendsListActivity.class);
+                startActivity(launchFriends);
                 break;
 
             default:
