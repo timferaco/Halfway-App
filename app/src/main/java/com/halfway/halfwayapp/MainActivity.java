@@ -92,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private ArrayList<PlaceCard> mPlaces;
     private ArrayList<RequestCard> mRequests;
+    private ArrayList<FriendCard> mFriends;
     private OkHttpClient mHTTPClient;
 
     private FirebaseFirestore db;
@@ -132,6 +133,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mPlaces = new ArrayList<PlaceCard>();
         mRequests = new ArrayList<RequestCard>();
+        mFriends = new ArrayList<FriendCard>();
         mHTTPClient = new OkHttpClient();
 
         View bottomSheet = findViewById(R.id.bottom_sheet);
@@ -188,9 +190,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             .build(),
                     RC_SIGN_IN);
         }
-
-
-
     }
 
     public void grabMidpoint(){
@@ -283,14 +282,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             case R.id.chat:
                 //TODO: implement chat
 
-                //fetchFriends();
+                fetchFriends();
 
 
 
-                Log.d("LATLONG", "IN CHAT");
+                /*Log.d("LATLONG", "IN CHAT");
                 GeoPoint geo = new GeoPoint(44.468015, -73.215069);
                 addRequests("423534sdg34sfgsg4", geo);
-                fetchRequests();
+                fetchRequests();*/
 
                 Log.d("REQUESTS SIZE1", Integer.toString(mRequests.size()));
 
@@ -447,14 +446,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void fetchFriends(){
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        Log.d("UIDDDDDDD", FirebaseAuth.getInstance().getUid());
-        db.collection("Users").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+        db.collection("FriendsList").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if (task.isSuccessful()) {
                     for (QueryDocumentSnapshot document : task.getResult()) {
-                        Log.d("DocumentSnapshot data! ", "");
+                        Log.d("DocumentSnapshot data! ", Objects.requireNonNull(document.get("email")).toString());
+                        mFriends.add(new FriendCard(document.get("email").toString(), document.get("photo").toString()));
                     }
+
+                    Log.d("FriendsSize", String.valueOf(mFriends.size()));
                 } else {
                     Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
                 }
