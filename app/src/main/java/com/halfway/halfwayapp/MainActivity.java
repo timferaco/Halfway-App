@@ -3,6 +3,8 @@ package com.halfway.halfwayapp;
 
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -10,6 +12,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
@@ -19,19 +22,30 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Transformation;
+
+import androidx.core.app.ActivityCompat;
 import androidx.core.view.GravityCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.renderscript.Sampler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -56,6 +70,7 @@ import okhttp3.Response;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
+
 import android.widget.Toast;
 
 import com.google.android.material.navigation.NavigationView;
@@ -69,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private ArrayList<PlaceCard> mPlaces;
     private OkHttpClient mHTTPClient;
+    private FusedLocationProviderClient fusedLocationClient;
 
     private TextView prof_email;
     private TextView prof_display_name;
@@ -76,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     DrawerLayout drawerLayout;
     NavigationView navigationView;
+    private LatLng currentLocation;
 
     private GoogleMap mMap;
 
@@ -84,6 +101,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     final private String RESPONSE_TAG = "com.halfway.response";
     private static final int RC_SIGN_IN = 123;
     private static final int PICK_IMAGE = 100;
+    protected LocationManager locationManager;
+    protected LocationListener locationListener;
 
 
     @Override
@@ -95,6 +114,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         drawerLayout = findViewById(R.id.drawer);
         navigationView = findViewById(R.id.navigationView);
         floatingActionButton = findViewById(R.id.floatingActionButton);
+
+        currentLocation = new LatLng(0,0);
+        getCurrentLocation();
+        Log.d("Location!:", String.valueOf(currentLocation.latitude));
+
 
         navigationView.bringToFront();
         navigationView.setNavigationItemSelectedListener(MainActivity.this);
@@ -118,8 +142,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mHTTPClient = new OkHttpClient();
 
 
+
+
         //Fills Recycler Views
         refresh();
+
+        //User Location setup
+
 
         // Firebase Setup
         //Checks to see if there is a current user
@@ -167,17 +196,32 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      * The API invokes this callback when the map is ready for use.
      */
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(final GoogleMap googleMap) {
         mMap = googleMap;
-        // Position the map's camera near Sydney, Australia.
         //Todo: Get Current Location
-        googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(-34, 151)));
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        // Got last known location. In some rare situations this can be null.
+                        if (location != null) {
+                            Log.d("CurrentLocationLat", String.valueOf(currentLocation.latitude));
+                            Log.d("CurrentLocationLong", String.valueOf(currentLocation.longitude));
+                            currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 20));
+                        } else {
+                            mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
+                        }
+                    }
+                });
+
     }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        switch (menuItem.getItemId()){
+        switch (menuItem.getItemId()) {
             case R.id.log_out:
                 if (user != null) {
                     AuthUI.getInstance()
@@ -244,7 +288,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 startActivity(launchReqs);
                 break;
             case R.id.chat:
-                //TODO: implement chat
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
+
                 break;
             case R.id.friends:
                 Intent launchFriends = new Intent(this, FriendsListActivity.class);
@@ -256,6 +301,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 break;
         }
         return false;
+    }
+
+    public void getCurrentLocation(){
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        fusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        // Got last known location. In some rare situations this can be null.
+                        if (location != null) {
+                            currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
+
+
+                        }
+                    }
+                });
+
     }
 
     @Override
