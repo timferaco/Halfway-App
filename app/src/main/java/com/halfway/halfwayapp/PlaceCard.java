@@ -20,7 +20,6 @@ public class PlaceCard {
         mAddress = address;
         mCategory = category;
         mIconURL = iconURL;
-
     }
 
     public String getmAddress() {
