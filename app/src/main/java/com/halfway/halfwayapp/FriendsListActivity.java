@@ -50,7 +50,6 @@ public class FriendsListActivity extends AppCompatActivity {
 
         mUsers = new ArrayList<User>();
         db = FirebaseFirestore.getInstance();
-        Log.d("!!URL1", "Fetch Friends");
         fetchFriends();
 
         DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
@@ -102,8 +101,6 @@ public class FriendsListActivity extends AppCompatActivity {
         public void bind(User user) {
 
             Picasso.get().load(user.getPhotoURL()).into(prof_pic);
-            Log.d("!!URL1", user.getEmail());
-            Log.d("!!URL", user.getPhotoURL().toString());
             u_email.setText(user.getEmail());
             req_but.setOnClickListener(new View.OnClickListener() {
                 @Override

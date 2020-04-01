@@ -1,63 +1,39 @@
 package com.halfway.halfwayapp;
 
-import androidx.annotation.*;
 
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Polyline;
-import com.google.android.gms.maps.model.PolylineOptions;
+
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.gms.common.api.GoogleApi;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
-import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.GeoPoint;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
-import com.halfway.halfwayapp.MapRequestHelpers.TaskLoadedCallback;
-import com.squareup.picasso.Picasso;
-import com.squareup.picasso.Target;
-import com.squareup.picasso.Transformation;
 
-import androidx.appcompat.app.*;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Transformation;
 import androidx.core.view.GravityCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.graphics.RectF;
-import android.graphics.Shader;
-import android.graphics.drawable.Drawable;
-import android.location.Location;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -67,17 +43,10 @@ import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.w3c.dom.Text;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import okhttp3.OkHttpClient;
@@ -85,30 +54,20 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
-
-import android.os.Bundle;
-import android.view.MenuItem;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 import com.google.android.material.navigation.NavigationView;
 
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, TaskLoadedCallback, NavigationView.OnNavigationItemSelectedListener {
-    private BottomSheetBehavior mBottomSheetBehavior;
-    private TextView mTextViewState;
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
     private RecyclerView mPlaceRecycler;
     private PlaceAdapter mPlaceAdapter;
     private FloatingActionButton floatingActionButton;
-    private FusedLocationProviderClient fusedLocationClient;
 
     private ArrayList<PlaceCard> mPlaces;
-    private ArrayList<RequestCard> mRequests;
     private OkHttpClient mHTTPClient;
 
     private TextView prof_email;
@@ -118,11 +77,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     DrawerLayout drawerLayout;
     NavigationView navigationView;
 
-    private FirebaseFirestore db;
     private GoogleMap mMap;
-    private Polyline drawDir;
-    private ArrayList<LatLng> latlngs;
-    private LatLng midpointLatLng;
+
 
     final private String MAPS_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json?&location=";
     final private String RESPONSE_TAG = "com.halfway.response";
@@ -134,40 +90,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        db = FirebaseFirestore.getInstance();
-        latlngs = new ArrayList<>();
 
+        //Updates Left Drawer
         drawerLayout = findViewById(R.id.drawer);
         navigationView = findViewById(R.id.navigationView);
-        //setSupportActionBar(toolbar);
-        //getSupportActionBar().setDefaultDisplayHomeAsUpEnabled(true);
-        //getSupportActionBar().setDisplayShowTitleEnabled(false);
         floatingActionButton = findViewById(R.id.floatingActionButton);
-        floatingActionButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                drawerLayout.openDrawer(GravityCompat.START);
-                Log.d("DRAWER", "onClick: Open Drawer");
-                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                if (user != null) {
-                    prof_email = findViewById(R.id.prof_email);
-                    prof_display_name = findViewById(R.id.prof_disp_name);
-                    prof_picture = findViewById(R.id.profilePic);
-                    Log.d("!!EMAIL", user.getEmail());
 
-                    prof_email.setText(user.getEmail());
-                    prof_display_name.setText(user.getDisplayName());
-
-                    Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(prof_picture);
-                }
-            }
-        });
-
-        //navigationView.setActivated(true);
         navigationView.bringToFront();
         navigationView.setNavigationItemSelectedListener(MainActivity.this);
-
-
 
         // Get the SupportMapFragment and register for the callback
         // when the map is ready for use.
@@ -181,58 +111,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mPlaceRecycler.setLayoutManager(new LinearLayoutManager(this));
         mPlaceRecycler.setAdapter(mPlaceAdapter);
 
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
         DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
         mPlaceRecycler.addItemDecoration(itemDecor);
 
         mPlaces = new ArrayList<PlaceCard>();
-        mRequests = new ArrayList<RequestCard>();
         mHTTPClient = new OkHttpClient();
 
-        View bottomSheet = findViewById(R.id.bottom_sheet);
 
-        mBottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
-
-        mBottomSheetBehavior.setBottomSheetCallback(new BottomSheetBehavior.BottomSheetCallback() {
-            @Override
-            public void onStateChanged(@NonNull View bottomSheet, int newState) {
-                switch (newState) {
-                    case BottomSheetBehavior.STATE_COLLAPSED:
-                        //mTextViewState.setText("Collapsed");
-                        break;
-                    case BottomSheetBehavior.STATE_DRAGGING:
-                        //mTextViewState.setText("Dragging...");
-                        break;
-                    case BottomSheetBehavior.STATE_EXPANDED:
-                        //mTextViewState.setText("Expanded");
-                        break;
-                    case BottomSheetBehavior.STATE_HIDDEN:
-                        //mTextViewState.setText("Hidden");
-                        break;
-                    case BottomSheetBehavior.STATE_SETTLING:
-                        //mTextViewState.setText("Settling...");
-                        break;
-                }
-            }
-
-            @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
-                //mTextViewState.setText("Sliding...");
-            }
-        });
-
-
-        fetchUserLocations();
+        //Fills Recycler Views
         refresh();
 
+        // Firebase Setup
+        //Checks to see if there is a current user
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
         if (user != null) {
+            // Grabs profile picture
             floatingActionButton = findViewById(R.id.floatingActionButton);
-
-
-            //floatingActionButton.setImageDrawable(CircleImageView Picasso.get().load(user.getPhotoUrl()));
             Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
         } else {
             //No user sign in
@@ -246,21 +141,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             .build(),
                     RC_SIGN_IN);
         }
+
+        //Sets up Drawer
+        floatingActionButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawerLayout.openDrawer(GravityCompat.START);
+                Log.d("DRAWER", "onClick: Open Drawer");
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if (user != null) {
+                    prof_email = findViewById(R.id.prof_email);
+                    prof_display_name = findViewById(R.id.prof_disp_name);
+                    prof_picture = findViewById(R.id.profilePic);
+                    prof_email.setText(user.getEmail());
+                    prof_display_name.setText(user.getDisplayName());
+
+                    Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(prof_picture);
+                }
+            }
+        });
     }
-
-    public void grabMidpoint(){
-        Log.d("INHERE", "TAG");
-
-
-
-    }
-
-    /*@Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the main_menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main_menu, menu);
-        return true;
-    }*/
 
     /**
      * Manipulates the map when it's available.
@@ -268,9 +168,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
      */
     @Override
     public void onMapReady(GoogleMap googleMap) {
-
         mMap = googleMap;
         // Position the map's camera near Sydney, Australia.
+        //Todo: Get Current Location
         googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(-34, 151)));
     }
 
@@ -304,14 +204,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
                 break;
             case R.id.change_picture:
+                //Checks to see if a user is logged in
                 if (user != null) {
-                    openGallery();
+                    Intent gallery =
+                            new Intent(Intent.ACTION_PICK,
+                                    android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
+                    startActivityForResult(gallery, PICK_IMAGE);
                     //https://scontent.fbtv1-1.fna.fbcdn.net/v/t31.0-8/s960x960/10679591_648893885224134_7166029734996188708_o.jpg?_nc_cat=110&_nc_sid=da1649&_nc_ohc=ioKCYq4xVOUAX9q5rm4&_nc_ht=scontent.fbtv1-1.fna&_nc_tp=7&oh=f4fc4628684bad08b6e2f8c41890816f&oe=5EA64EB2
                 } else {
                     // No user is signed in
                 }
                 break;
             case R.id.del_acct:
+                //Firebase Listener to Delete account
                 user.delete()
                         .addOnCompleteListener(new OnCompleteListener<Void>() {
                             @Override
@@ -321,6 +226,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 }
                             }
                         });
+
                 //Launch log in activity
                 List<AuthUI.IdpConfig> providers = Arrays.asList(
                         new AuthUI.IdpConfig.EmailBuilder().build());
@@ -332,8 +238,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 .build(),
                         RC_SIGN_IN);
 
-                floatingActionButton = findViewById(R.id.floatingActionButton);
-                floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                 break;
             case R.id.requests:
                 Intent launchReqs = new Intent(this, RequestsActivity.class);
@@ -341,20 +245,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 break;
             case R.id.chat:
                 //TODO: implement chat
-                Log.d("LATLONG", "IN CHAT");
-                fusedLocationClient.getLastLocation()
-                        .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                            @Override
-                            public void onSuccess(Location location) {
-                                // Got last known location. In some rare situations this can be null.
-                                if (location != null) {
-                                    Log.d("LATLONG", String.valueOf(location.getLatitude()));
-                                    Log.d("LATLONG", String.valueOf(location.getLongitude()));
-                                }
-                                //Log.d("LATLONG", String.valueOf(location.getLatitude()));
-                                //Log.d("LATLONG", String.valueOf(location.getLongitude()));
-                            }
-                        });
                 break;
             case R.id.friends:
                 Intent launchFriends = new Intent(this, FriendsListActivity.class);
@@ -368,27 +258,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return false;
     }
 
-
-    private void openGallery() {
-        Intent gallery =
-                new Intent(Intent.ACTION_PICK,
-                        android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
-        startActivityForResult(gallery, PICK_IMAGE);
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (resultCode == RESULT_OK && requestCode == PICK_IMAGE) {
-
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
             UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
                     .setPhotoUri(data.getData())
                     .build();
 
-
+            //Updates user's photo with UpdataProfile
             user.updateProfile(profileUpdates)
                     .addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
@@ -405,10 +286,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                         }
                     });
-            //Log.d("PhotoURL3", user.getPhotoUrl().toString());
-            //Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
         }
-
+        //Sign in Results
         if (requestCode == RC_SIGN_IN) {
             IdpResponse response = IdpResponse.fromResultIntent(data);
 
@@ -417,6 +296,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 floatingActionButton = findViewById(R.id.floatingActionButton);
 
+                //Checks to see if user's email is Verified.
                 if(!user.isEmailVerified()) {
                     user.sendEmailVerification()
                             .addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -429,8 +309,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             });
                 }
 
+                //Pulls from Database if there is a photo, otherwise sets to null white profile
                 if(user.getPhotoUrl() == null) {
-
                     floatingActionButton = findViewById(R.id.floatingActionButton);
                     floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                 } else {
@@ -446,101 +326,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
 
-    //Preparing for Directions API, returns the correct info
-    private String getRequestUrl(LatLng origin, LatLng dest) {
-        //Value of origin
-        String org = "origin=" + origin.latitude +","+origin.longitude;
-        //Value of destination
-        String destination = "destination=" + dest.latitude+","+dest.longitude;
-        //Set value enable the sensor
-        String sensor = "sensor=false";
-        //Mode for find direction
-        //!!! CAN CHANGE MODE !!!
-        String mode = "mode=driving";
-        //Build the full param
-        String param = org +"&" + destination + "&" +sensor+"&" +mode;
-        //Output format
-        String output = "json";
-        //Create url to request
-        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + param + "&key=" + getString(R.string.google_maps_key);
-        return url;
-    }
-
-    private void fetchRequests() {
-
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        db.collection("Users").document(user.getIdToken(false).toString()).collection("Requests").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    ArrayList<RequestCard> temp = new ArrayList<>();
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-
-                        GeoPoint primaryUserLocation = (GeoPoint) document.get("primaryUserLocation");
-                        GeoPoint secondaryUserLocation = (GeoPoint) document.get("secondaryUserLocation");
-                        String primaryUserID = (String) document.get("primaryUid");
-                        String secondaryUserID = (String) document.get("secondaryUid");
-                        GeoPoint midpoint = (GeoPoint) document.get("midpointLocation");
-
-                        temp.add(new RequestCard(primaryUserID, primaryUserLocation, secondaryUserID, secondaryUserLocation, midpoint));
-                    }
-                    Log.d("REQUESTS SIZE", Integer.toString(mRequests.size()));
-                    mRequests = temp;
-                } else {
-                    Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
-                }
-            }
-        });
-
-    }
-
-
-
-    private void fetchUserLocations(){
-        db.collection("UserLocation")
-                .get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                GeoPoint tempGP = (GeoPoint) document.get("latlng");
-                                LatLng tempLL = new LatLng(tempGP.getLatitude(), tempGP.getLongitude());
-                                latlngs.add(tempLL);
-                            }
-                        } else {
-                            Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
-                        }
-                    }
-                });
-
-            DocumentReference docRef = db.collection( "Midpoint").document("kxLhrrEpYoCNgvogDte7");
-            docRef.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if (task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-                    if (document.exists()) {
-                        Log.d("TAG", "DocumentSnapshot data: " + document.getData());
-                        GeoPoint tempGP = (GeoPoint) document.get("midpoint");
-                        LatLng midpoint = new LatLng(tempGP.getLatitude(), tempGP.getLongitude());
-                        latlngs.add(midpoint);
-                    } else {
-                        Log.d("TAG", "No such document");
-                    }
-                } else {
-                    Log.d("TAG", "get failed with ", task.getException());
-                }
-            }
-        });
-
-    }
-
     private class RefreshTask extends AsyncTask<Void, Void, String> {
         @Override
         protected String doInBackground(Void... voids) {
-            grabMidpoint();
+
             Request request = new Request.Builder()
                     .url("https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location=43.49041,-72.12494&radius=100000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ")
                     .build();
@@ -563,38 +352,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
-    void addRequests(String secondaryUserID, GeoPoint userLocation) {
-
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        CollectionReference requests = db.collection("Users");
-
-        DocumentReference doc = requests.document(user.getIdToken(false).toString());
-        CollectionReference requestsDocs = doc.collection("Requests");
-
-        Map<String, Object> request1 = new HashMap<>();
-        request1.put("primaryUserLocation", userLocation);
-        request1.put("primaryUid", user.getUid());
-        request1.put("secondaryUserLocation", null);
-        request1.put("secondaryUid", secondaryUserID);
-        request1.put("midpointLocation", null);
-        requestsDocs.document().set(request1);
-
-
-    }
-
     private void refresh() {
         RefreshTask rt = new RefreshTask();
         rt.execute();
     }
 
     private void parseJSON(String jsonString) {
-        String id;
-        String name;
+        String id, name, address, iconURL;
         PlaceCard temp;
-        String address;
         JSONArray category;
-        String iconURL;
         try {
             JSONObject responseObject = new JSONObject(jsonString);
             JSONArray items = responseObject.getJSONArray("results");
@@ -643,8 +409,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         public void bind(PlaceCard place) {
 
+            //Binds the bottom view
             Picasso.get().load("https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=" + place.getmIconURL() + "&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ").into(iv);
-            Log.d("PLACEICONURL",  place.getmIconURL());
             title.setText(place.getmName());
             add.setText(place.getmAddress());
             cat.setText(place.getmCategory());
@@ -660,10 +426,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     startActivity(mapIntent);
                 }
             });
-            //iv.setImageBitmap(b);
-
-
-
         }
     }
 
@@ -692,8 +454,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         public Bitmap transform(Bitmap source) {
             int size = Math.min(source.getWidth(), source.getHeight());
 
-            int x = (source.getWidth() - size) / 2;
-            int y = (source.getHeight() - size) / 2;
+            int x = (source.getWidth() - size) / 3;
+            int y = (source.getHeight() - size) / 3;
 
             Bitmap squaredBitmap = Bitmap.createBitmap(source, x, y, size, size);
             if (squaredBitmap != source) {
@@ -708,7 +470,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             paint.setShader(shader);
             paint.setAntiAlias(true);
 
-            float r = size/2f;
+            float r = size/2;
             canvas.drawCircle(r, r, r, paint);
 
             squaredBitmap.recycle();
@@ -720,16 +482,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return "circle";
         }
     }
-
-    @Override
-    public void onTaskDone(Object... values) {
-        if (drawDir != null)
-            drawDir.remove();
-        drawDir = mMap.addPolyline((PolylineOptions) values[0]);
-    }
-
-
-
 
 
 }

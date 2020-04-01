@@ -20,6 +20,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.squareup.picasso.Picasso;
@@ -47,6 +48,31 @@ public class RequestsActivity extends AppCompatActivity {
         mRequests = new ArrayList<RequestCard>();
         db = FirebaseFirestore.getInstance();
         Log.d("!!URL1", "Fetch Requests");
+
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        db.collection("Users").document(user.getUid()).collection("Requests").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if (task.isSuccessful()) {
+                    ArrayList<RequestCard> temp = new ArrayList<>();
+                    for (QueryDocumentSnapshot document : task.getResult()) {
+
+                        GeoPoint primaryUserLocation = (GeoPoint) document.get("primaryUserLocation");
+                        GeoPoint secondaryUserLocation = (GeoPoint) document.get("secondaryUserLocation");
+                        String primaryUserID = (String) document.get("primaryUid");
+                        String secondaryUserID = (String) document.get("secondaryUid");
+                        GeoPoint midpoint = (GeoPoint) document.get("midpointLocation");
+
+                        temp.add(new RequestCard(primaryUserID, primaryUserLocation, secondaryUserID, secondaryUserLocation, midpoint));
+                    }
+                    mRequests = temp;
+                    mReqAdapter.notifyDataSetChanged();
+                } else {
+                    Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
+                }
+            }
+        });
 
 
         mReqAdapter.notifyDataSetChanged();
