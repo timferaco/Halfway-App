@@ -289,7 +289,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 startActivity(launchReqs);
                 break;
             case R.id.chat:
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
+                Intent launchChat = new Intent(this, ChatActivity.class);
+                startActivity(launchChat);
 
                 break;
             case R.id.friends:
