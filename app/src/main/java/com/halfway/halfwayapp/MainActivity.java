@@ -161,11 +161,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } else {
             //No user sign in
             List<AuthUI.IdpConfig> providers = Arrays.asList(
-                    new AuthUI.IdpConfig.EmailBuilder().build());
+                    new AuthUI.IdpConfig.EmailBuilder().build(),
+                    new AuthUI.IdpConfig.GoogleBuilder().build());//Google Login doesn't work yet, but it adds the logo on the choose provider screen
 
             startActivityForResult(
                     AuthUI.getInstance()
                             .createSignInIntentBuilder()
+                            .setLogo(R.drawable.logo1x)
                             .setAvailableProviders(providers)
                             .build(),
                     RC_SIGN_IN);
@@ -242,6 +244,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     startActivityForResult(
                             AuthUI.getInstance()
                                     .createSignInIntentBuilder()
+                                    .setLogo(R.drawable.logo1x)
                                     .setAvailableProviders(providers)
                                     .build(),
                             RC_SIGN_IN);
@@ -273,6 +276,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     startActivityForResult(
                                             AuthUI.getInstance()
                                                     .createSignInIntentBuilder()
+                                                    .setLogo(R.drawable.logo1x)
                                                     .setAvailableProviders(providers)
                                                     .build(),
                                             RC_SIGN_IN);
