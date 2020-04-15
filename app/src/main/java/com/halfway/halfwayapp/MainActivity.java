@@ -289,8 +289,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 startActivity(launchReqs);
                 break;
             case R.id.chat:
-                Intent launchChat = new Intent(this, ChatActivity.class);
-                startActivity(launchChat);
 
                 break;
             case R.id.friends:
@@ -546,6 +544,5 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             return "circle";
         }
     }
-
 
 }

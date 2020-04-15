@@ -18,6 +18,7 @@ package com.halfway.halfwayapp;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.nfc.Tag;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Editable;
@@ -87,7 +88,7 @@ public class ChatActivity extends AppCompatActivity
     }
 
     private static final String TAG = "ChatActivity";
-    public static final String MESSAGES_CHILD = "messages";
+    public static String MESSAGES_CHILD;
     private static final int REQUEST_INVITE = 1;
     private static final int REQUEST_IMAGE = 2;
     private static final String LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif";
@@ -125,6 +126,9 @@ public class ChatActivity extends AppCompatActivity
         // Initialize Firebase Auth
         mFirebaseAuth = FirebaseAuth.getInstance();
         mFirebaseUser = mFirebaseAuth.getCurrentUser();
+
+        MESSAGES_CHILD = getIntent().getStringExtra("MESSAGES_CHILD");
+
         if (mFirebaseUser == null) {
             // Not signed in, launch the Sign In activity
             //startActivity(new Intent(this, SignInActivity.class));
@@ -156,12 +160,15 @@ public class ChatActivity extends AppCompatActivity
                 FriendlyMessage friendlyMessage = dataSnapshot.getValue(FriendlyMessage.class);
                 if (friendlyMessage != null) {
                     friendlyMessage.setId(dataSnapshot.getKey());
+                    Log.d("DATASNaP", dataSnapshot.getValue().toString());
+
                 }
                 return friendlyMessage;
             }
         };
 
         DatabaseReference messagesRef = mFirebaseDatabaseReference.child(MESSAGES_CHILD);
+        Log.d("SCRAT2", MESSAGES_CHILD);
         FirebaseRecyclerOptions<FriendlyMessage> options =
                 new FirebaseRecyclerOptions.Builder<FriendlyMessage>()
                         .setQuery(messagesRef, parser)
@@ -414,5 +421,7 @@ public class ChatActivity extends AppCompatActivity
                     }
                 });
     }
+
+
 
 }
