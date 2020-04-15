@@ -24,20 +24,28 @@ import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.firebase.ui.database.SnapshotParser;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 import com.squareup.picasso.Picasso;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 
 
@@ -50,6 +58,7 @@ public class FriendsListActivity extends AppCompatActivity  {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_friends_list);
 
@@ -65,57 +74,121 @@ public class FriendsListActivity extends AppCompatActivity  {
             }
         });
 
+
+
         mUsers = new ArrayList<User>();
         db = FirebaseFirestore.getInstance();
+
+        addFriend("paul.igasdf@mymail.champlain.edu");
         fetchFriends();
 
         DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
         mUserRecycler.addItemDecoration(itemDecor);
 
-
-
-
         mUserAdapter.notifyDataSetChanged();
     }
 
-    private void fetchFriends(){
-
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        db.collection("FriendsList").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+    private void addFriend(final String email) {
+        //email is in the "set"
+        final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        db.collection("UserProfiles").document(email).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    ArrayList<User> tempUsers = new ArrayList<User>();
-                    for (QueryDocumentSnapshot document : task.getResult()) {
-                        Log.d("DocumentSnapshot data! ", Objects.requireNonNull(document.get("email")).toString());
-                        Log.d("DocumentSnapshot data! ", Objects.requireNonNull(document.get("photo")).toString());
-                        User temp = new User(document.get("email").toString(), document.get("photo").toString());
-
-                        tempUsers.add(temp);
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if(task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    //"friends", FieldValue.arrayUnion(email))
+                    if(document.exists()) {
+                        db.collection("UserProfiles").document(user.getEmail()).update("friends", FieldValue.arrayUnion(email));
+                    } else {
+                        Log.d("!!!DOES NOT EXIST!!!", "!!!DOES NOT EXIST!!!");
                     }
-                    mUsers = tempUsers;
-                    Log.d("!!Size!", String.valueOf(mUsers.size()));
-                    mUserAdapter.notifyDataSetChanged();
-
-                } else {
-                    Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
                 }
             }
         });
-        Log.d("!!Size", String.valueOf(mUsers.size()));
     }
 
-    /*@Override
-    public void onNoteClick(int position) {
-        User user = mUsers.get(position);
-        Intent launchChat = new Intent(getBaseContext(), ChatActivity.class);
-        launchChat.putExtra("EMAIL", user.getEmail());
-        launchChat.putExtra("MESSAGES_CHILD", MESSAGES_CHILD);
+    private void fetchFriends(){
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            db.collection("UserProfiles").document(user.getEmail()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if (task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        if(document.exists()) {
+                            ArrayList<String> temp = new ArrayList<>();
 
-        Log.d("SCRATUSEREMAIL", user.getEmail());
-        startActivity(launchChat);
+                            temp = (ArrayList<String>) document.get("friends");
+                            final ArrayList tempUsers = new ArrayList();
+                            for(int i = 0; i < temp.size(); i++) {
 
-    }*/
+                                db.collection("UserProfiles").document(temp.get(i)).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+
+                                        if(task.isSuccessful()) {
+                                            DocumentSnapshot document = task.getResult();
+
+                                            if(document.exists()){
+                                                User temp = new User(document.get("email").toString(), document.get("photoURL").toString(), document.get("name").toString());
+                                                tempUsers.add(temp);
+                                                Log.d("!!!Temp", String.valueOf(tempUsers.size()));
+                                            } else {
+                                                //No Exists
+                                            }
+                                        }
+                                        mUsers = tempUsers;
+                                        mUserAdapter.notifyDataSetChanged();
+                                    }
+                                });
+
+                            }
+                        }
+
+                        } else {
+                            //Document Doesn't Exist
+                        }
+
+                }
+            });
+    }
+
+    /*
+    new OnCompleteListener<QuerySnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<QuerySnapshot> task) {
+
+
+
+                        }
+                        mUsers = tempUsers;
+                        mUserAdapter.notifyDataSetChanged();
+
+                    } else {
+                        Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
+                    }
+                }
+            });
+
+
+    db.collection("UserProfiles").document(email).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                    if(task.isSuccessful()) {
+                                        DocumentSnapshot document = task.getResult();
+                                        if(document.exists()){
+                                            User temp = new User(document.get("email").toString(), document.get("photoURL").toString(), document.get("name").toString());
+                                            tempUsers.add(temp);
+                                            Log.d("!!!Temp", String.valueOf(tempUsers.size()));
+                                        } else {
+                                            //No Exists
+                                        }
+                                    }
+                                    mUsers = tempUsers;
+                                    mUserAdapter.notifyDataSetChanged();
+                                }
+                            });
+
+     */
 
     private class UserHolder extends RecyclerView.ViewHolder {
         private ImageView prof_pic;

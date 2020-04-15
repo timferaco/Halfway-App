@@ -10,20 +10,25 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.tasks.OnCompleteListener;
 
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import com.google.firebase.firestore.QuerySnapshot;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Transformation;
 
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -34,6 +39,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -57,10 +63,17 @@ import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.w3c.dom.Document;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 import okhttp3.OkHttpClient;
@@ -89,13 +102,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private TextView prof_email;
     private TextView prof_display_name;
     private CircleImageView prof_picture;
+    private FirebaseFirestore db;
 
     DrawerLayout drawerLayout;
     NavigationView navigationView;
     private LatLng currentLocation;
 
     private GoogleMap mMap;
-
 
     final private String MAPS_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json?&location=";
     final private String RESPONSE_TAG = "com.halfway.response";
@@ -115,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         navigationView = findViewById(R.id.navigationView);
         floatingActionButton = findViewById(R.id.floatingActionButton);
 
-        currentLocation = new LatLng(0,0);
+        currentLocation = new LatLng(0, 0);
         getCurrentLocation();
         Log.d("Location!:", String.valueOf(currentLocation.latitude));
 
@@ -141,9 +154,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mPlaces = new ArrayList<PlaceCard>();
         mHTTPClient = new OkHttpClient();
 
-
-
-
         //Fills Recycler Views
         refresh();
 
@@ -158,6 +168,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Grabs profile picture
             floatingActionButton = findViewById(R.id.floatingActionButton);
             Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
+
+
         } else {
             //No user sign in
             List<AuthUI.IdpConfig> providers = Arrays.asList(
@@ -189,7 +201,45 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
         });
+
+        updateUserProfile();
+
+
     }
+
+    public void updateUserProfile() {
+        final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        //Update UserProfiles
+
+
+        db.collection("UserProfiles").document(user.getEmail()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if (document.exists()) {
+                        Map<String, Object> profile = new HashMap<>();
+                        ArrayList<String> friends = new ArrayList<>();
+                        profile.put("name", user.getDisplayName());
+                        profile.put("email", user.getEmail());
+                        db.collection("UserProfiles").document(user.getEmail()).update(profile);
+                    } else {
+                        Map<String, Object> profile = new HashMap<>();
+                        ArrayList<String> friends = new ArrayList<>();
+                        profile.put("name", user.getDisplayName());
+                        profile.put("email", user.getEmail());
+                        profile.put("friends", friends);
+
+                        db.collection("UserProfiles").document(user.getEmail()).set(profile);
+                    }
+                }
+
+
+            }
+        });
+    }
+
+
 
     /**
      * Manipulates the map when it's available.
@@ -251,7 +301,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 //Checks to see if a user is logged in
                 if (user != null) {
                     Intent gallery =
-                            new Intent(Intent.ACTION_PICK,
+                            new Intent(Intent.ACTION_OPEN_DOCUMENT,
                                     android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
                     startActivityForResult(gallery, PICK_IMAGE);
                     //https://scontent.fbtv1-1.fna.fbcdn.net/v/t31.0-8/s960x960/10679591_648893885224134_7166029734996188708_o.jpg?_nc_cat=110&_nc_sid=da1649&_nc_ohc=ioKCYq4xVOUAX9q5rm4&_nc_ht=scontent.fbtv1-1.fna&_nc_tp=7&oh=f4fc4628684bad08b6e2f8c41890816f&oe=5EA64EB2
@@ -312,8 +362,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         // Got last known location. In some rare situations this can be null.
                         if (location != null) {
                             currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
-
-
                         }
                     }
                 });
@@ -324,11 +372,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
+
         if (resultCode == RESULT_OK && requestCode == PICK_IMAGE) {
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
+
+            Log.d("PHOTO!!", data.getDataString());
             UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                    .setPhotoUri(data.getData())
+                    .setPhotoUri(Uri.parse(data.getDataString()))
                     .build();
 
             //Updates user's photo with UpdataProfile
@@ -345,15 +396,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(prof_picture);
                                 Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
 
+                                Map<String, Object> profile = new HashMap<>();
+                                profile.put("photoURL", user.getPhotoUrl().toString());
+
+                                db.collection("UserProfiles").document(user.getEmail()).update(profile);
                             }
+
                         }
                     });
         }
         //Sign in Results
+
         if (requestCode == RC_SIGN_IN) {
             IdpResponse response = IdpResponse.fromResultIntent(data);
 
             if (resultCode == RESULT_OK) {
+
                 // Successfully signed in
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 floatingActionButton = findViewById(R.id.floatingActionButton);
@@ -370,14 +428,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 }
                             });
                 }
+                String tempPhotoURL;
 
                 //Pulls from Database if there is a photo, otherwise sets to null white profile
                 if(user.getPhotoUrl() == null) {
                     floatingActionButton = findViewById(R.id.floatingActionButton);
                     floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                 } else {
-                    Picasso.get().load("https://scontent.fbtv1-1.fna.fbcdn.net/v/t31.0-8/s960x960/10679591_648893885224134_7166029734996188708_o.jpg?_nc_cat=110&_nc_sid=da1649&_nc_ohc=ioKCYq4xVOUAX9q5rm4&_nc_ht=scontent.fbtv1-1.fna&_nc_tp=7&oh=f4fc4628684bad08b6e2f8c41890816f&oe=5EA64EB2").transform(new CircleTransform()).into(floatingActionButton);
+                    Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(prof_picture);
+                    Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
                 }
+
+
+                //Update UserProfiles
+                Map<String, Object> profile = new HashMap<>();
+                ArrayList<String> friends = new ArrayList<>();
+                profile.put("name", user.getDisplayName());
+                profile.put("email", user.getEmail());
+
+                db.collection("UserProfiles").document(user.getEmail()).update(profile);
+
             } else {
                 // Sign in failed. If response is null the user canceled the
                 // sign-in flow using the back button. Otherwise check

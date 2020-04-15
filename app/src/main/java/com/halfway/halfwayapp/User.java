@@ -5,11 +5,13 @@ import android.net.Uri;
 public class User {
     private String email;
     private String photoURL;
+    private String displayName;
 
 
-    public User(String email, String photoURL) {
+    public User(String email, String photoURL, String displayName) {
         this.email = email;
         this.photoURL = photoURL;
+        this.displayName = displayName;
     }
     public  User() {
         email = "null";

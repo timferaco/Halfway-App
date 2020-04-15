@@ -19,6 +19,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -51,28 +52,38 @@ public class RequestsActivity extends AppCompatActivity {
 
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        db.collection("Users").document(user.getUid()).collection("Requests").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if (task.isSuccessful()) {
-                    ArrayList<RequestCard> temp = new ArrayList<>();
-                    for (QueryDocumentSnapshot document : task.getResult()) {
+        user.getIdToken(true).addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
+            @Override
+            public void onComplete(@NonNull Task<GetTokenResult> task) {
+                String idToken = task.getResult().getToken();
 
-                        GeoPoint primaryUserLocation = (GeoPoint) document.get("primaryUserLocation");
-                        GeoPoint secondaryUserLocation = (GeoPoint) document.get("secondaryUserLocation");
-                        String primaryUserID = (String) document.get("primaryUid");
-                        String secondaryUserID = (String) document.get("secondaryUid");
-                        GeoPoint midpoint = (GeoPoint) document.get("midpointLocation");
+                db.collection("Users").document(idToken).collection("Requests").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            ArrayList<RequestCard> temp = new ArrayList<>();
+                            for (QueryDocumentSnapshot document : task.getResult()) {
 
-                        temp.add(new RequestCard(primaryUserID, primaryUserLocation, secondaryUserID, secondaryUserLocation, midpoint));
+                                GeoPoint primaryUserLocation = (GeoPoint) document.get("primaryUserLocation");
+                                GeoPoint secondaryUserLocation = (GeoPoint) document.get("secondaryUserLocation");
+                                String primaryUserID = (String) document.get("primaryUid");
+                                String secondaryUserID = (String) document.get("secondaryUid");
+                                GeoPoint midpoint = (GeoPoint) document.get("midpointLocation");
+
+                                temp.add(new RequestCard(primaryUserID, primaryUserLocation, secondaryUserID, secondaryUserLocation, midpoint));
+                            }
+                            mRequests = temp;
+                            mReqAdapter.notifyDataSetChanged();
+                        } else {
+                            Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
+                        }
                     }
-                    mRequests = temp;
-                    mReqAdapter.notifyDataSetChanged();
-                } else {
-                    Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
-                }
+                });
+
+
             }
-        });
+            });
+
 
 
         mReqAdapter.notifyDataSetChanged();
