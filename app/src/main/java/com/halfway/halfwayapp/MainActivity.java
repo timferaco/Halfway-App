@@ -169,6 +169,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Grabs profile picture
             floatingActionButton = findViewById(R.id.floatingActionButton);
             Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
+            updateUserProfile();
 
 
         } else {
@@ -203,7 +204,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        updateUserProfile();
+
 
 
     }
