@@ -136,6 +136,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         navigationView.bringToFront();
         navigationView.setNavigationItemSelectedListener(MainActivity.this);
 
+        db = FirebaseFirestore.getInstance();
+
         // Get the SupportMapFragment and register for the callback
         // when the map is ready for use.
         SupportMapFragment mapFragment =
@@ -168,6 +170,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // Grabs profile picture
             floatingActionButton = findViewById(R.id.floatingActionButton);
             Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
+            updateUserProfile();
 
 
         } else {
@@ -202,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
 
-        updateUserProfile();
+
 
 
     }
@@ -210,6 +213,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void updateUserProfile() {
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         //Update UserProfiles
+
 
 
         db.collection("UserProfiles").document(user.getEmail()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -435,6 +439,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     floatingActionButton = findViewById(R.id.floatingActionButton);
                     floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                 } else {
+                    Log.d("PHOTOURL", user.getPhotoUrl().toString());
                     Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(prof_picture);
                     Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
                 }
