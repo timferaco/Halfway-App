@@ -161,6 +161,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         // Firebase Setup
+        db = FirebaseFirestore.getInstance();
         //Checks to see if there is a current user
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
