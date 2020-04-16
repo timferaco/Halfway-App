@@ -6,10 +6,6 @@
         android:icon="@drawable/ic_people_outline_black_24dp"
         android:title="Friends" />
     <item
-        android:id="@+id/chat"
-        android:icon="@drawable/ic_chat_bubble_outline_black_24dp"
-        android:title="Chat" />
-    <item
         android:id="@+id/change_picture"
         android:icon="@drawable/ic_crop_original_black_24dp"
         android:title="Change Picture" />

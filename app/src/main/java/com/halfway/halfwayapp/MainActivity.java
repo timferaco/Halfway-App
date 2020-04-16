@@ -339,9 +339,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Intent launchReqs = new Intent(this, RequestsActivity.class);
                 startActivity(launchReqs);
                 break;
-            case R.id.chat:
-
-                break;
             case R.id.friends:
                 Intent launchFriends = new Intent(this, FriendsListActivity.class);
                 startActivity(launchFriends);
