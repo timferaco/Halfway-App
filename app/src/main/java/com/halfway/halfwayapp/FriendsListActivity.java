@@ -63,7 +63,7 @@ public class FriendsListActivity extends AppCompatActivity  {
         setContentView(R.layout.activity_friends_list);
 
         mUserAdapter = new UserAdapter();
-        mUserRecycler = (RecyclerView) findViewById(R.id.user_recycler);
+        mUserRecycler = findViewById(R.id.user_recycler);
         mUserRecycler.setLayoutManager(new LinearLayoutManager(this));
         mUserRecycler.setAdapter(mUserAdapter);
 

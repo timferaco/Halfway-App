@@ -42,7 +42,7 @@ public class RequestsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_requests);
 
         mReqAdapter = new ReqAdapter();
-        mReqRecycler = (RecyclerView) findViewById(R.id.req_recycler);
+        mReqRecycler = findViewById(R.id.req_recycler);
         mReqRecycler.setLayoutManager(new LinearLayoutManager(this));
         mReqRecycler.setAdapter(mReqAdapter);
 

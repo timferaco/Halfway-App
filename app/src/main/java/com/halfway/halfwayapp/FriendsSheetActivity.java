@@ -1,6 +1,35 @@
 package com.halfway.halfwayapp;
 
 
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -11,64 +40,21 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
-
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-
-import com.google.firebase.firestore.QuerySnapshot;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Transformation;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.FileProvider;
-import androidx.core.view.GravityCompat;
-import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import android.Manifest;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.BitmapShader;
-import android.graphics.Canvas;
-import android.graphics.Paint;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.provider.Settings;
-import android.renderscript.Sampler;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.w3c.dom.Document;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -80,22 +66,14 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.drawerlayout.widget.DrawerLayout;
 
-import android.widget.Toast;
+public class FriendsSheetActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
 
-import com.google.android.material.navigation.NavigationView;
-
-
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
-
-    private RecyclerView mPlaceRecycler;
-    private PlaceAdapter mPlaceAdapter;
+    private RecyclerView mFriendSheetRecycler;
+    private FriendAdapter mFriendSheetAdapter;
     private FloatingActionButton floatingActionButton;
 
-    private ArrayList<PlaceCard> mPlaces;
+    private ArrayList<User> mFriends;
     private OkHttpClient mHTTPClient;
     private FusedLocationProviderClient fusedLocationClient;
 
@@ -121,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_friends_sheet);
 
         //Updates Left Drawer
         drawerLayout = findViewById(R.id.drawer);
@@ -134,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
         navigationView.bringToFront();
-        navigationView.setNavigationItemSelectedListener(MainActivity.this);
+        navigationView.setNavigationItemSelectedListener(FriendsSheetActivity.this);
 
         db = FirebaseFirestore.getInstance();
 
@@ -145,21 +123,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        mPlaceAdapter = new PlaceAdapter();
-        mPlaceRecycler = findViewById(R.id.places_recycler);
-        mPlaceRecycler.setLayoutManager(new LinearLayoutManager(this));
-        mPlaceRecycler.setAdapter(mPlaceAdapter);
+        mFriendSheetAdapter = new FriendAdapter();
+        mFriendSheetRecycler = findViewById(R.id.friends_sheet_recycler);
+        mFriendSheetRecycler.setLayoutManager(new LinearLayoutManager(this));
+        mFriendSheetRecycler.setAdapter(mFriendSheetAdapter);
 
         DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
-        mPlaceRecycler.addItemDecoration(itemDecor);
+        mFriendSheetRecycler.addItemDecoration(itemDecor);
 
-        mPlaces = new ArrayList<PlaceCard>();
+        mFriends = new ArrayList<User>();
         mHTTPClient = new OkHttpClient();
-
-        //Fills Recycler Views
-        refresh();
-
-        //User Location setup
 
 
         // Firebase Setup
@@ -347,7 +320,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 break;
 
             default:
-                Toast.makeText(MainActivity.this, "Default", Toast.LENGTH_SHORT).show();
+                Toast.makeText(FriendsSheetActivity.this, "Default", Toast.LENGTH_SHORT).show();
                 break;
         }
         return false;
@@ -458,97 +431,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
-    private class RefreshTask extends AsyncTask<Void, Void, String> {
-        @Override
-        protected String doInBackground(Void... voids) {
-
-            Request request = new Request.Builder()
-                    .url("https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location=43.49041,-72.12494&radius=100000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ")
-                    .build();
-
-
-            try (Response response = mHTTPClient.newCall(request).execute()) {
-                Log.d("CALL", "doInBackground: making call to Google API");
-                return response.body().string();
-            } catch (Exception e) {
-                e.printStackTrace();
-                return "Error: Could not complete request.";
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-            parseJSON(result);
-
-        }
-    }
-
-    private void refresh() {
-        RefreshTask rt = new RefreshTask();
-        rt.execute();
-    }
-
-    private void parseJSON(String jsonString) {
-        String id, name, address, iconURL;
-        PlaceCard temp;
-        JSONArray category;
-        try {
-            JSONObject responseObject = new JSONObject(jsonString);
-            JSONArray items = responseObject.getJSONArray("results");
-            for (int i = 0; i < items.length(); i++) {
-                //Store id, address, icon and name
-                JSONObject item = items.getJSONObject(i);
-                id = item.getString("id");
-                address = item.getString("formatted_address");
-                name = item.getString("name");
-                iconURL = item.getJSONArray("photos").getJSONObject(0).getString("photo_reference");
-
-                //Store Type
-                category = item.getJSONArray("types");
-                String categoryInfo = category.get(0).toString();
-                categoryInfo = categoryInfo.substring(0,1).toUpperCase() + categoryInfo.substring(1);
-
-                //Store Coords
-                JSONObject geometry = item.getJSONObject("geometry").getJSONObject("location");
-                LatLng coordinates = new LatLng(geometry.getDouble("lat"), geometry.getDouble("lng"));
-
-                //Create Object
-                temp = new PlaceCard(id, name, coordinates, address, categoryInfo, iconURL);
-                mPlaces.add(temp);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        mPlaceAdapter.notifyDataSetChanged();
-    }
-
-    private class PlaceHolder extends RecyclerView.ViewHolder {
+    private class FriendHolder extends RecyclerView.ViewHolder {
         private ImageView iv;
         private TextView title;
         private TextView cat;
         private TextView add;
         private Button but;
 
-        public PlaceHolder (@NonNull View itemView) {
+        public FriendHolder (@NonNull View itemView) {
             super(itemView);
-            iv = itemView.findViewById(R.id.place_img);
-            title = itemView.findViewById(R.id.place_title);
-            add = itemView.findViewById(R.id.place_address);
-            cat = itemView.findViewById(R.id.place_category);
-            but = itemView.findViewById(R.id.button);
+
         }
 
-        public void bind(PlaceCard place) {
+        public void bind(User friend) {
 
             //Binds the bottom view
-            Picasso.get().load("https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=" + place.getmIconURL() + "&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ").into(iv);
-            title.setText(place.getmName());
-            add.setText(place.getmAddress());
-            cat.setText(place.getmCategory());
-            final LatLng temp = place.getmCoordinates();
-            but.setOnClickListener(new View.OnClickListener() {
+            //Picasso.get().load("https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=" + place.getmIconURL() + "&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ").into(iv);
+            //title.setText(user.getmName());
+            //add.setText(place.getmAddress());
+            //cat.setText(place.getmCategory());
+            /*but.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     //Taken From https://developers.google.com/maps/documentation/urls/android-intents
@@ -558,26 +460,26 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     mapIntent.setPackage("com.google.android.apps.maps");
                     startActivity(mapIntent);
                 }
-            });
+            });*/
         }
     }
 
-    private class PlaceAdapter extends RecyclerView.Adapter<PlaceHolder> {
+    private class FriendAdapter extends RecyclerView.Adapter<FriendHolder> {
         @NonNull
         @Override
-        public PlaceHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        public FriendHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
             LayoutInflater li = LayoutInflater.from(getApplicationContext());
-            return new PlaceHolder(li.inflate(R.layout.places_cell, parent, false));
+            return new FriendHolder(li.inflate(R.layout.friends_sheet_cell, parent, false));
         }
 
         @Override
-        public void onBindViewHolder(@NonNull PlaceHolder holder, int position) {
-            holder.bind(mPlaces.get(position));
+        public void onBindViewHolder(@NonNull FriendHolder holder, int position) {
+            holder.bind(mFriends.get(position));
         }
 
         @Override
         public int getItemCount() {
-            return mPlaces.size();
+            return mFriends.size();
         }
     }
     //https://gist.github.com/julianshen/5829333
