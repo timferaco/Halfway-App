@@ -207,17 +207,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
         });
-
-
-
+        drawerLayout.closeDrawers();
 
     }
 
     public void updateUserProfile() {
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         //Update UserProfiles
-
-
 
         db.collection("UserProfiles").document(user.getEmail()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -268,6 +264,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 20));
                         } else {
+
                             mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
                         }
                     }
@@ -338,9 +335,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 }
                             }
                         });
-
-
-
 
                 break;
             case R.id.requests:

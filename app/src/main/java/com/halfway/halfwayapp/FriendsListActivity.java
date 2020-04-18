@@ -79,7 +79,7 @@ public class FriendsListActivity extends AppCompatActivity  {
         mUsers = new ArrayList<User>();
         db = FirebaseFirestore.getInstance();
 
-        addFriend("paul.igasdf@mymail.champlain.edu");
+        addFriend("timferaco@gmail.com");
         fetchFriends();
 
         DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
@@ -99,12 +99,15 @@ public class FriendsListActivity extends AppCompatActivity  {
                     //"friends", FieldValue.arrayUnion(email))
                     if(document.exists()) {
                         db.collection("UserProfiles").document(user.getEmail()).update("friends", FieldValue.arrayUnion(email));
+                        db.collection("UserProfiles").document(email).update("friends", FieldValue.arrayUnion(user.getEmail()));
                     } else {
                         Log.d("!!!DOES NOT EXIST!!!", "!!!DOES NOT EXIST!!!");
                     }
                 }
             }
         });
+
+
     }
 
     private void fetchFriends(){
