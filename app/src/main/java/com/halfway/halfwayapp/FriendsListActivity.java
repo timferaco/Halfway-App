@@ -41,6 +41,8 @@ import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 
 import java.lang.reflect.Array;
@@ -227,6 +229,14 @@ public class FriendsListActivity extends AppCompatActivity  {
             DatabaseReference mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
             mFirebaseAuth = FirebaseAuth.getInstance();
             mFirebaseUser = mFirebaseAuth.getCurrentUser();
+
+            StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" +user.getEmail());
+            storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                @Override
+                public void onSuccess(Uri uri) {
+                    Picasso.get().load(uri).transform(new FriendsSheetActivity.CircleTransform()).into(prof_pic);
+                }
+            });
 
 
             final String messagesChild = getMessagesChild(mFirebaseUser.getEmail(), user.getEmail());

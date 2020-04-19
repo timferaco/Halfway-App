@@ -1,6 +1,7 @@
 package com.halfway.halfwayapp;
 
 
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapShader;
@@ -17,6 +18,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -30,6 +32,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -40,6 +43,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -49,12 +53,15 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Transformation;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -143,8 +150,22 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
         if (user != null) {
             // Grabs profile picture
             floatingActionButton = findViewById(R.id.floatingActionButton);
-            Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
+            prof_picture = findViewById(R.id.profilePic);
+            StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" +user.getEmail());
+            storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                @Override
+                public void onSuccess(Uri uri) {
+                    if(uri != null) {
+                        Picasso.get().load(uri).transform(new CircleTransform()).into(floatingActionButton);
+                    }
+
+                }
+            });
+
             updateUserProfile();
+
+            fetchFriends();
+
 
 
         } else {
@@ -176,12 +197,20 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                     prof_email.setText(user.getEmail());
                     prof_display_name.setText(user.getDisplayName());
 
-                    Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(prof_picture);
+
+                    StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" +user.getEmail());
+                    storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            Picasso.get().load(uri).transform(new CircleTransform()).into(prof_picture);
+                            Picasso.get().load(uri).transform(new CircleTransform()).into(floatingActionButton);
+                        }
+                    });
                 }
             }
         });
         drawerLayout.closeDrawers();
-        fetchFriends();
+
 
     }
 
@@ -325,8 +354,8 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                 //Checks to see if a user is logged in
                 if (user != null) {
                     Intent gallery =
-                            new Intent(Intent.ACTION_OPEN_DOCUMENT,
-                                    android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
+                            new Intent(Intent.ACTION_GET_CONTENT, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
+                    gallery.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                     startActivityForResult(gallery, PICK_IMAGE);
                     //https://scontent.fbtv1-1.fna.fbcdn.net/v/t31.0-8/s960x960/10679591_648893885224134_7166029734996188708_o.jpg?_nc_cat=110&_nc_sid=da1649&_nc_ohc=ioKCYq4xVOUAX9q5rm4&_nc_ht=scontent.fbtv1-1.fna&_nc_tp=7&oh=f4fc4628684bad08b6e2f8c41890816f&oe=5EA64EB2
                 } else {
@@ -387,6 +416,13 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
 
     }
 
+    //https://www.youtube.com/watch?v=6u0gzjth4IE
+    private String getExtension(Uri uri) {
+        ContentResolver cr = getContentResolver();
+        MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
+        return mimeTypeMap.getExtensionFromMimeType(cr.getType(uri));
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -394,36 +430,16 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
 
         if (resultCode == RESULT_OK && requestCode == PICK_IMAGE) {
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            FirebaseStorage storageRef = FirebaseStorage.getInstance();
+
+            StorageReference photoRef = storageRef.getReference("profilePictures/" + user.getEmail());
+            photoRef.putFile(data.getData());
+            Picasso.get().load(data.getData()).transform(new CircleTransform()).into(prof_picture);
+            Picasso.get().load(data.getData()).transform(new CircleTransform()).into(floatingActionButton);
 
 
-            Log.d("PHOTO!!", data.getDataString());
-            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                    .setPhotoUri(Uri.parse(data.getDataString()))
-                    .build();
-
-            //Updates user's photo with UpdataProfile
-            user.updateProfile(profileUpdates)
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Log.d("Updated", "User profile updated.");
-                                floatingActionButton = findViewById(R.id.floatingActionButton);
-                                prof_picture = findViewById(R.id.profilePic);
-                                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                                Log.d("PhotoURL2", user.getPhotoUrl().toString());
-                                Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(prof_picture);
-                                Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
-
-                                Map<String, Object> profile = new HashMap<>();
-                                profile.put("photoURL", user.getPhotoUrl().toString());
-
-                                db.collection("UserProfiles").document(user.getEmail()).update(profile);
-                            }
-
-                        }
-                    });
         }
+
         //Sign in Results
 
         if (requestCode == RC_SIGN_IN) {
@@ -454,9 +470,14 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                     floatingActionButton = findViewById(R.id.floatingActionButton);
                     floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                 } else {
-                    Log.d("PHOTOURL", user.getPhotoUrl().toString());
-                    Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(prof_picture);
-                    Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
+                    StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" +user.getEmail());
+                    storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            Picasso.get().load(uri).transform(new CircleTransform()).into(prof_picture);
+                            Picasso.get().load(uri).transform(new CircleTransform()).into(floatingActionButton);
+                        }
+                    });
                 }
 
 
@@ -492,7 +513,17 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
         public void bind(User friend) {
             Log.d("D!", friend.getPhotoURL());
             displayName.setText(friend.getDisplayName());
-            Picasso.get().load(friend.getPhotoURL()).into(iv);
+
+            StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" +friend.getEmail());
+            storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                @Override
+                public void onSuccess(Uri uri) {
+                    Log.d("SUCCESS", uri.toString());
+                    Picasso.get().load(uri).transform(new CircleTransform()).into(iv);
+                }
+            });
+            //Picasso.get().load(friend.getPhotoURL()).into(iv);
+
             requestButton.setOnClickListener(new View.OnClickListener() {
                                                  @Override
                                                  public void onClick(View view) {
