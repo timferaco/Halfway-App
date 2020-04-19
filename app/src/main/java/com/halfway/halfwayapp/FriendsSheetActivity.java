@@ -181,6 +181,7 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
             }
         });
         drawerLayout.closeDrawers();
+        fetchFriends();
 
     }
 
@@ -210,6 +211,51 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                     }
                 }
 
+
+            }
+        });
+    }
+
+    private void fetchFriends(){
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        db.collection("UserProfiles").document(user.getEmail()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if(document.exists()) {
+                        ArrayList<String> temp = new ArrayList<>();
+
+                        temp = (ArrayList<String>) document.get("friends");
+                        final ArrayList tempUsers = new ArrayList();
+                        for(int i = 0; i < temp.size(); i++) {
+
+                            db.collection("UserProfiles").document(temp.get(i)).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+
+                                    if(task.isSuccessful()) {
+                                        DocumentSnapshot document = task.getResult();
+
+                                        if(document.exists()){
+                                            User temp = new User(document.get("email").toString(), document.get("photoURL").toString(), document.get("name").toString());
+                                            tempUsers.add(temp);
+                                            Log.d("!!!Temp", String.valueOf(tempUsers.size()));
+                                        } else {
+                                            //No Exists
+                                        }
+                                    }
+                                    mFriends = tempUsers;
+                                    mFriendSheetAdapter.notifyDataSetChanged();
+                                }
+                            });
+
+                        }
+                    }
+
+                } else {
+                    //Document Doesn't Exist
+                }
 
             }
         });
@@ -433,34 +479,28 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
 
     private class FriendHolder extends RecyclerView.ViewHolder {
         private ImageView iv;
-        private TextView title;
-        private TextView cat;
-        private TextView add;
-        private Button but;
+        private TextView displayName;
+        private Button requestButton;
 
         public FriendHolder (@NonNull View itemView) {
             super(itemView);
-
+            iv = itemView.findViewById(R.id.friend_img);
+            displayName = itemView.findViewById(R.id.friend_email);
+            requestButton = itemView.findViewById(R.id.request_button);
         }
 
         public void bind(User friend) {
+            Log.d("D!", friend.getPhotoURL());
+            displayName.setText(friend.getDisplayName());
+            Picasso.get().load(friend.getPhotoURL()).into(iv);
+            requestButton.setOnClickListener(new View.OnClickListener() {
+                                                 @Override
+                                                 public void onClick(View view) {
+                                                     Intent launchReqs = new Intent(getApplicationContext(), RequestsActivity.class);
+                                                     startActivity(launchReqs);
 
-            //Binds the bottom view
-            //Picasso.get().load("https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=" + place.getmIconURL() + "&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ").into(iv);
-            //title.setText(user.getmName());
-            //add.setText(place.getmAddress());
-            //cat.setText(place.getmCategory());
-            /*but.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    //Taken From https://developers.google.com/maps/documentation/urls/android-intents
-
-                    Uri gmmIntentUri = Uri.parse("google.navigation:q=" + temp.latitude + "," + temp.longitude);
-                    Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
-                    mapIntent.setPackage("com.google.android.apps.maps");
-                    startActivity(mapIntent);
-                }
-            });*/
+                                                 }
+                                             });
         }
     }
 

@@ -16,6 +16,11 @@ public class User {
     public  User() {
         email = "null";
         photoURL = null;
+        displayName = "null";
+    }
+
+    public String getDisplayName() {
+        return displayName;
     }
 
     public String getEmail() {
