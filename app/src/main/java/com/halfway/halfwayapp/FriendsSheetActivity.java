@@ -474,7 +474,6 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                     storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                         @Override
                         public void onSuccess(Uri uri) {
-                            Picasso.get().load(uri).transform(new CircleTransform()).into(prof_picture);
                             Picasso.get().load(uri).transform(new CircleTransform()).into(floatingActionButton);
                         }
                     });
@@ -511,7 +510,7 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
         }
 
         public void bind(User friend) {
-            Log.d("D!", friend.getPhotoURL());
+            Log.d("D!!", friend.getEmail());
             displayName.setText(friend.getDisplayName());
 
             StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" +friend.getEmail());
