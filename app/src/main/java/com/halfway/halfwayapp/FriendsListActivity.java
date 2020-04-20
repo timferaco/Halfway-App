@@ -223,7 +223,6 @@ public class FriendsListActivity extends AppCompatActivity  {
 
         public void bind(final User user) {
 
-            Picasso.get().load(user.getPhotoURL()).into(prof_pic);
             u_email.setText(user.getEmail());
 
             DatabaseReference mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();

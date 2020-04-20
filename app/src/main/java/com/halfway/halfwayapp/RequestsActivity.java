@@ -1,5 +1,6 @@
 package com.halfway.halfwayapp;
 
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -14,18 +15,25 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import de.hdodenhof.circleimageview.CircleImageView;
 
+import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.GetTokenResult;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -48,60 +56,108 @@ public class RequestsActivity extends AppCompatActivity {
 
         mRequests = new ArrayList<RequestCard>();
         db = FirebaseFirestore.getInstance();
-        Log.d("!!URL1", "Fetch Requests");
-
 
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        user.getIdToken(true).addOnCompleteListener(new OnCompleteListener<GetTokenResult>() {
-            @Override
-            public void onComplete(@NonNull Task<GetTokenResult> task) {
-                String idToken = task.getResult().getToken();
 
-                db.collection("Users").document(idToken).collection("Requests").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            ArrayList<RequestCard> temp = new ArrayList<>();
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-
-                                GeoPoint primaryUserLocation = (GeoPoint) document.get("primaryUserLocation");
-                                GeoPoint secondaryUserLocation = (GeoPoint) document.get("secondaryUserLocation");
-                                String primaryUserID = (String) document.get("primaryUid");
-                                String secondaryUserID = (String) document.get("secondaryUid");
-                                GeoPoint midpoint = (GeoPoint) document.get("midpointLocation");
-
-                                temp.add(new RequestCard(primaryUserID, primaryUserLocation, secondaryUserID, secondaryUserLocation, midpoint));
-                            }
-                            mRequests = temp;
-                            mReqAdapter.notifyDataSetChanged();
-                        } else {
-                            Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
-                        }
-                    }
-                });
-
-
-            }
-            });
-
+        fetchRequests();
 
 
         mReqAdapter.notifyDataSetChanged();
     }
 
+    private void fetchRequests(){
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        db.collection("UserProfiles").document(user.getEmail()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if (task.isSuccessful()) {
+                    DocumentSnapshot document = task.getResult();
+                    if(document.exists()) {
+                        ArrayList<String> temp = new ArrayList<>();
+
+                        temp = (ArrayList<String>) document.get("requests");
+                        final ArrayList requestList = new ArrayList();
+                        for(int i = 0; i < temp.size(); i++) {
+
+                            db.document(temp.get(i)).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+
+                                    if(task.isSuccessful()) {
+                                        DocumentSnapshot document = task.getResult();
+
+                                        if(document.exists()){
+
+                                            GeoPoint primaryUserLocation = (GeoPoint) document.get("primaryUserLocation");
+                                            GeoPoint secondaryUserLocation = (GeoPoint) document.get("secondaryUserLocation");
+                                            String primaryUserID = (String) document.get("primaryUserEmail");
+                                            String secondaryUserID = (String) document.get("secondaryUserEmail");
+                                            GeoPoint midpoint = (GeoPoint) document.get("midpoint");
+
+                                            requestList.add(new RequestCard(primaryUserID, primaryUserLocation, secondaryUserID, secondaryUserLocation, midpoint));
+
+
+                                            //User temp = new User(document.get("email").toString(), document.get("photoURL").toString(), document.get("name").toString());
+                                            //tempUsers.add(temp);
+                                            //Log.d("!!!Temp", String.valueOf(tempUsers.size()));
+                                        } else {
+                                            //No Exists
+                                        }
+                                    }
+                                    //mUsers = tempUsers;
+                                    mRequests = requestList;
+                                    mReqAdapter.notifyDataSetChanged();
+                                    //mUserAdapter.notifyDataSetChanged();
+                                }
+                            });
+
+                        }
+                    }
+
+                } else {
+                    //Document Doesn't Exist
+                }
+
+            }
+        });
+    }
+
+
+
     private class ReqHolder extends RecyclerView.ViewHolder {
         private TextView prim;
         private TextView sec;
+        private CircleImageView primProfile;
+        private CircleImageView secProfilePic;
 
         public ReqHolder (@NonNull View itemView) {
             super(itemView);
             prim = itemView.findViewById(R.id.prim_user);
             sec = itemView.findViewById(R.id.sec_user);
+            primProfile = itemView.findViewById(R.id.prim_user_image);
+            secProfilePic = itemView.findViewById(R.id.sec_user_image);
+
         }
 
         public void bind(RequestCard request) {
             prim.setText(request.getPrimaryUserID());
             sec.setText(request.getSecondaryUserID());
+
+            StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" +request.getPrimaryUserID());
+            storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                @Override
+                public void onSuccess(Uri uri) {
+                    Picasso.get().load(uri).transform(new FriendsSheetActivity.CircleTransform()).into(primProfile);
+                }
+            });
+
+           storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" +request.getSecondaryUserID());
+            storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                @Override
+                public void onSuccess(Uri uri) {
+                    Picasso.get().load(uri).transform(new FriendsSheetActivity.CircleTransform()).into(secProfilePic);
+                }
+            });
         }
     }
 

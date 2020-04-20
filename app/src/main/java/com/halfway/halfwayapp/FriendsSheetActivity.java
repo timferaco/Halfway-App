@@ -51,8 +51,11 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
@@ -427,7 +430,6 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-
         if (resultCode == RESULT_OK && requestCode == PICK_IMAGE) {
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
             FirebaseStorage storageRef = FirebaseStorage.getInstance();
@@ -436,8 +438,6 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
             photoRef.putFile(data.getData());
             Picasso.get().load(data.getData()).transform(new CircleTransform()).into(prof_picture);
             Picasso.get().load(data.getData()).transform(new CircleTransform()).into(floatingActionButton);
-
-
         }
 
         //Sign in Results
@@ -509,7 +509,7 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
             requestButton = itemView.findViewById(R.id.request_button);
         }
 
-        public void bind(User friend) {
+        public void bind(final User friend) {
             Log.d("D!!", friend.getEmail());
             displayName.setText(friend.getDisplayName());
 
@@ -523,15 +523,56 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
             });
             //Picasso.get().load(friend.getPhotoURL()).into(iv);
 
+
+
             requestButton.setOnClickListener(new View.OnClickListener() {
                                                  @Override
                                                  public void onClick(View view) {
+
+                                                     final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+                                                     HashMap<String, Object> requestInfo = new HashMap<>();
+                                                     requestInfo.put("primaryUserLocation", new GeoPoint(0.00, 0.00));
+                                                     requestInfo.put("primaryUserEmail", user.getEmail());
+                                                     requestInfo.put("secondaryUserLocation", null);
+                                                     requestInfo.put("secondaryUserEmail", friend.getEmail());
+                                                     requestInfo.put("midpoint", null);
+
+                                                     DocumentReference request = db.collection("Requests").document();
+                                                     request.set(requestInfo);
+
+                                                     db.collection("UserProfiles").document(friend.getEmail()).update("requests", FieldValue.arrayUnion(request.getPath()));
+                                                     db.collection("UserProfiles").document(user.getEmail()).update("requests", FieldValue.arrayUnion(request.getPath()));
+
                                                      Intent launchReqs = new Intent(getApplicationContext(), RequestsActivity.class);
                                                      startActivity(launchReqs);
-
                                                  }
-                                             });
+            });
         }
+
+        private void addRequest(final String email) {
+            //email is in the "set"
+            final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+            db.collection("UserProfiles").document(email).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                @Override
+                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                    if(task.isSuccessful()) {
+                        DocumentSnapshot document = task.getResult();
+                        //"friends", FieldValue.arrayUnion(email))
+                        if(document.exists()) {
+                            db.collection("UserProfiles").document(user.getEmail()).update("requests", FieldValue.arrayUnion("DocumentReferenceHere"));
+                            db.collection("UserProfiles").document(email).update("friends", FieldValue.arrayUnion(user.getEmail()));
+                        } else {
+                            Log.d("!!!DOES NOT EXIST!!!", "!!!DOES NOT EXIST!!!");
+                        }
+                    }
+                }
+            });
+
+
+        }
+
+
     }
 
     private class FriendAdapter extends RecyclerView.Adapter<FriendHolder> {
