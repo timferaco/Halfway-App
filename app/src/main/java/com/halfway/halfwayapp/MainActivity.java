@@ -12,8 +12,6 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -23,35 +21,26 @@ import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.GeoPoint;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Transformation;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.FileProvider;
 import androidx.core.view.GravityCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.Manifest;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Paint;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.provider.Settings;
-import android.renderscript.Sampler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -63,12 +52,7 @@ import android.widget.TextView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.w3c.dom.Document;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -209,6 +193,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
         drawerLayout.closeDrawers();
 
+
+
     }
 
     public void updateUserProfile() {
@@ -251,24 +237,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(final GoogleMap googleMap) {
         mMap = googleMap;
-        //Todo: Get Current Location
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        // Got last known location. In some rare situations this can be null.
-                        if (location != null) {
-                            Log.d("CurrentLocationLat", String.valueOf(currentLocation.latitude));
-                            Log.d("CurrentLocationLong", String.valueOf(currentLocation.longitude));
-                            currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 20));
-                        } else {
 
-                            mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
-                        }
-                    }
-                });
+
+
+        LatLng zoomLocation = new LatLng(Double.valueOf(getIntent().getStringExtra("latitude")), Double.valueOf(getIntent().getStringExtra("longitude")));
+        Log.d("ZOOM LOCATION", zoomLocation.toString());
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomLocation, 20));
+
 
     }
 
@@ -463,10 +438,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         @Override
         protected String doInBackground(Void... voids) {
 
-            Request request = new Request.Builder()
-                    .url("https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location=43.49041,-72.12494&radius=100000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ")
-                    .build();
+            Log.d("LatLONG", getIntent().getStringExtra("latitude"));
+            Log.d("LatLONG", getIntent().getStringExtra("longitude"));
 
+            Request request = new Request.Builder()
+                    .url("https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location="+ getIntent().getStringExtra("latitude") + "," + getIntent().getStringExtra("longitude") +"&radius=100000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ")
+                    .build();
 
             try (Response response = mHTTPClient.newCall(request).execute()) {
                 Log.d("CALL", "doInBackground: making call to Google API");

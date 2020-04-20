@@ -175,13 +175,14 @@ public class RequestsActivity extends AppCompatActivity {
                             updatedRequest.put("secondaryUserLocation", new GeoPoint(1.00, 1.00));
                             Log.d("ONCLICK", request.getDocID());
                             db.document(request.getDocID()).update(updatedRequest);
-
                             Log.d("ONCLICK", "WOOO!");
                         }
-
-
-
-
+                        Intent launchRequests = new Intent(getBaseContext(), MainActivity.class);
+                        Log.d("Latty", String.valueOf(request.getMidpoint().getLatitude()));
+                        Log.d("Latty", String.valueOf(request.getMidpoint().getLongitude()));
+                        launchRequests.putExtra("latitude", String.valueOf(request.getMidpoint().getLatitude()));
+                        launchRequests.putExtra("longitude", String.valueOf(request.getMidpoint().getLongitude()));
+                        startActivity(launchRequests);
 
                     }
                 });
