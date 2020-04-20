@@ -1,5 +1,6 @@
 package com.halfway.halfwayapp;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -35,6 +36,7 @@ import com.squareup.picasso.Picasso;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 
 public class RequestsActivity extends AppCompatActivity {
@@ -87,14 +89,14 @@ public class RequestsActivity extends AppCompatActivity {
                                         DocumentSnapshot document = task.getResult();
 
                                         if(document.exists()){
-
+                                            String docID = (String) document.get("docID");
                                             GeoPoint primaryUserLocation = (GeoPoint) document.get("primaryUserLocation");
                                             GeoPoint secondaryUserLocation = (GeoPoint) document.get("secondaryUserLocation");
                                             String primaryUserID = (String) document.get("primaryUserEmail");
                                             String secondaryUserID = (String) document.get("secondaryUserEmail");
                                             GeoPoint midpoint = (GeoPoint) document.get("midpoint");
 
-                                            requestList.add(new RequestCard(primaryUserID, primaryUserLocation, secondaryUserID, secondaryUserLocation, midpoint));
+                                            requestList.add(new RequestCard(docID, primaryUserID, primaryUserLocation, secondaryUserID, secondaryUserLocation, midpoint));
 
 
                                             //User temp = new User(document.get("email").toString(), document.get("photoURL").toString(), document.get("name").toString());
@@ -139,7 +141,7 @@ public class RequestsActivity extends AppCompatActivity {
 
         }
 
-        public void bind(RequestCard request) {
+        public void bind(final RequestCard request) {
             prim.setText(request.getPrimaryUserID());
             sec.setText(request.getSecondaryUserID());
 
@@ -158,6 +160,32 @@ public class RequestsActivity extends AppCompatActivity {
                     Picasso.get().load(uri).transform(new FriendsSheetActivity.CircleTransform()).into(secProfilePic);
                 }
             });
+            final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+                itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                       // Intent launchChat = new Intent(getBaseContext(), ChatActivity.class);
+                        //launchChat.putExtra("EMAIL", user.getEmail());
+                        //startActivity(launchChat);
+                        Log.d("ONCLICKSEC", request.getSecondaryUserID());
+                        Log.d("ONCLICKUSER", user.getEmail());
+                        if(request.getSecondaryUserID().equals(user.getEmail())) {
+                            HashMap<String, Object> updatedRequest = new HashMap<>();
+                            updatedRequest.put("secondaryUserLocation", new GeoPoint(1.00, 1.00));
+                            Log.d("ONCLICK", request.getDocID());
+                            db.document(request.getDocID()).update(updatedRequest);
+
+                            Log.d("ONCLICK", "WOOO!");
+                        }
+
+
+
+
+
+                    }
+                });
+
         }
     }
 

@@ -9,14 +9,17 @@ public class RequestCard {
     private String primaryUserID;
     private String secondaryUserID;
     private GeoPoint midpoint;
+    private String docID;
 
-    RequestCard(String pUserID, GeoPoint pUserLocation, String secUserId, GeoPoint secUserLocation, GeoPoint mid) {
+    RequestCard(String pdocID, String pUserID, GeoPoint pUserLocation, String secUserId, GeoPoint secUserLocation, GeoPoint mid) {
+        docID = pdocID;
         primaryUserID = pUserID;
         primaryUserLocation = pUserLocation;
         secondaryUserID = secUserId;
         secondaryUserLocation = secUserLocation;
         midpoint = mid;
     }
+    public String getDocID() { return docID; }
 
     public GeoPoint getMidpoint() {
         return midpoint;

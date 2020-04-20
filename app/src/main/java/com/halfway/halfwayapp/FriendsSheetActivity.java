@@ -315,7 +315,6 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                             currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 20));
                         } else {
-
                             mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
                         }
                     }
@@ -532,13 +531,15 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                                                      final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
                                                      HashMap<String, Object> requestInfo = new HashMap<>();
+
                                                      requestInfo.put("primaryUserLocation", new GeoPoint(0.00, 0.00));
                                                      requestInfo.put("primaryUserEmail", user.getEmail());
-                                                     requestInfo.put("secondaryUserLocation", null);
+                                                     requestInfo.put("secondaryUserLocation", new GeoPoint(0.00,0.00));
                                                      requestInfo.put("secondaryUserEmail", friend.getEmail());
                                                      requestInfo.put("midpoint", null);
 
                                                      DocumentReference request = db.collection("Requests").document();
+                                                     requestInfo.put("docID", request.getPath());
                                                      request.set(requestInfo);
 
                                                      db.collection("UserProfiles").document(friend.getEmail()).update("requests", FieldValue.arrayUnion(request.getPath()));
