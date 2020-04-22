@@ -81,7 +81,6 @@ public class FriendsListActivity extends AppCompatActivity  {
         mUsers = new ArrayList<User>();
         db = FirebaseFirestore.getInstance();
 
-        addFriend("timferaco@gmail.com");
         fetchFriends();
 
         DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
@@ -90,27 +89,7 @@ public class FriendsListActivity extends AppCompatActivity  {
         mUserAdapter.notifyDataSetChanged();
     }
 
-    private void addFriend(final String email) {
-        //email is in the "set"
-        final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        db.collection("UserProfiles").document(email).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                if(task.isSuccessful()) {
-                    DocumentSnapshot document = task.getResult();
-                    //"friends", FieldValue.arrayUnion(email))
-                    if(document.exists()) {
-                        db.collection("UserProfiles").document(user.getEmail()).update("friends", FieldValue.arrayUnion(email));
-                        db.collection("UserProfiles").document(email).update("friends", FieldValue.arrayUnion(user.getEmail()));
-                    } else {
-                        Log.d("!!!DOES NOT EXIST!!!", "!!!DOES NOT EXIST!!!");
-                    }
-                }
-            }
-        });
 
-
-    }
 
     private void fetchFriends(){
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -134,7 +113,7 @@ public class FriendsListActivity extends AppCompatActivity  {
                                             DocumentSnapshot document = task.getResult();
 
                                             if(document.exists()){
-                                                User temp = new User(document.get("email").toString(), document.get("photoURL").toString(), document.get("name").toString());
+                                                User temp = new User(document.get("email").toString(),  document.get("name").toString());
                                                 tempUsers.add(temp);
                                                 Log.d("!!!Temp", String.valueOf(tempUsers.size()));
                                             } else {
@@ -233,7 +212,13 @@ public class FriendsListActivity extends AppCompatActivity  {
             storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                 @Override
                 public void onSuccess(Uri uri) {
-                    Picasso.get().load(uri).transform(new FriendsSheetActivity.CircleTransform()).into(prof_pic);
+                        Picasso.get().load(uri).transform(new FriendsSheetActivity.CircleTransform()).into(prof_pic);
+
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    prof_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_send_black_24dp));
                 }
             });
 

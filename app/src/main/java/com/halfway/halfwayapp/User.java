@@ -8,14 +8,12 @@ public class User {
     private String displayName;
 
 
-    public User(String email, String photoURL, String displayName) {
+    public User(String email,  String displayName) {
         this.email = email;
-        this.photoURL = photoURL;
         this.displayName = displayName;
     }
     public  User() {
         email = "null";
-        photoURL = null;
         displayName = "null";
     }
 

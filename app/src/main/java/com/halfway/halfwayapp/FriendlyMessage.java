@@ -23,20 +23,24 @@ public class FriendlyMessage {
     private String name;
     private String photoUrl;
     private String imageUrl;
+    private String email;
 
     public FriendlyMessage() {
     }
 
-    public FriendlyMessage(String text, String name, String photoUrl, String imageUrl) {
+    public FriendlyMessage(String text, String name, String photoUrl, String imageUrl, String mEmail) {
         this.text = text;
         this.name = name;
         this.photoUrl = photoUrl;
         this.imageUrl = imageUrl;
+        this.email = mEmail;
     }
 
     public String getId() {
         return id;
     }
+
+    public String getEmail() {return email; }
 
     public void setId(String id) {
         this.id = id;

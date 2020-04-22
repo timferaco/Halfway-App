@@ -56,6 +56,7 @@ import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -66,6 +67,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -191,6 +193,7 @@ public class ChatActivity extends AppCompatActivity
                     viewHolder.messageImageView.setVisibility(ImageView.VISIBLE);
                 } else if (friendlyMessage.getImageUrl() != null) {
                     String imageUrl = friendlyMessage.getImageUrl();
+
                     if (imageUrl.startsWith("gs://")) {
                         StorageReference storageReference = FirebaseStorage.getInstance()
                                 .getReferenceFromUrl(imageUrl);
@@ -224,9 +227,19 @@ public class ChatActivity extends AppCompatActivity
                     viewHolder.messengerImageView.setImageDrawable(ContextCompat.getDrawable(ChatActivity.this,
                             R.drawable.ic_person_white_24dp));
                 } else {
-                    Glide.with(ChatActivity.this)
-                            .load(friendlyMessage.getPhotoUrl())
-                            .into(viewHolder.messengerImageView);
+                    StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" +friendlyMessage.getEmail());
+                    storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            if(uri != null) {
+                                Picasso.get().load(uri).transform(new FriendsSheetActivity.CircleTransform()).into(viewHolder.messengerImageView);
+                            } else {
+
+                            }
+
+                        }
+                    });
+
                 }
 
             }
@@ -280,23 +293,23 @@ public class ChatActivity extends AppCompatActivity
                         FriendlyMessage(mMessageEditText.getText().toString(),
                         mUsername,
                         mPhotoUrl,
-                        null /* no image */);
+                        null /* no image */, mFirebaseUser.getEmail());
                 mFirebaseDatabaseReference.child(MESSAGES_CHILD)
                         .push().setValue(friendlyMessage);
                 mMessageEditText.setText("");
             }
         });
 
-        mAddMessageImageView = findViewById(R.id.addMessageImageView);
+        /*mAddMessageImageView = findViewById(R.id.addMessageImageView);
         mAddMessageImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.setType("image/*");
                 startActivityForResult(intent, REQUEST_IMAGE);
             }
-        });
+        });*/
     }
 
     @Override
@@ -368,7 +381,7 @@ public class ChatActivity extends AppCompatActivity
                     Log.d(TAG, "Uri: " + uri.toString());
 
                     FriendlyMessage tempMessage = new FriendlyMessage(null, mUsername, mPhotoUrl,
-                            LOADING_IMAGE_URL);
+                            LOADING_IMAGE_URL, mFirebaseUser.getEmail());
                     mFirebaseDatabaseReference.child(MESSAGES_CHILD).push()
                             .setValue(tempMessage, new DatabaseReference.CompletionListener() {
                                 @Override
@@ -408,7 +421,7 @@ public class ChatActivity extends AppCompatActivity
                                                     if (task.isSuccessful()) {
                                                         FriendlyMessage friendlyMessage =
                                                                 new FriendlyMessage(null, mUsername, mPhotoUrl,
-                                                                        task.getResult().toString());
+                                                                        task.getResult().toString(), mFirebaseUser.getEmail());
                                                         mFirebaseDatabaseReference.child(MESSAGES_CHILD).child(key)
                                                                 .setValue(friendlyMessage);
                                                     }
