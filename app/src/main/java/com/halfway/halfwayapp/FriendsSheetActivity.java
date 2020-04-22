@@ -36,6 +36,7 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -138,7 +139,7 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String s) {
-                addFriend(s);
+                addFriend(s, true);
                 return true;
             }
 
@@ -169,6 +170,26 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
         mFriendSheetAdapter = new FriendAdapter();
         mFriendSheetRecycler = findViewById(R.id.friends_sheet_recycler);
         mFriendSheetRecycler.setLayoutManager(new LinearLayoutManager(this));
+        ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                String email = mFriends.remove(viewHolder.getAdapterPosition()).getEmail();
+                addFriend(email, false);
+
+                Toast.makeText(getApplicationContext(), "Friend Deleted", Toast.LENGTH_SHORT).show();
+
+                mFriendSheetAdapter.notifyDataSetChanged();
+            }
+        };
+        new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(mFriendSheetRecycler);
+
+
+
         mFriendSheetRecycler.setAdapter(mFriendSheetAdapter);
 
         DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
@@ -379,6 +400,7 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
     }
 
 
+
     /**
      * Manipulates the map when it's available.
      * The API invokes this callback when the map is ready for use.
@@ -558,7 +580,7 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
         return mimeTypeMap.getExtensionFromMimeType(cr.getType(uri));
     }
 
-    private void addFriend(final String email) {
+    private void addFriend(final String email, final boolean addFriend) {
 //email is in the "set"
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         db.collection("UserProfiles").document(email).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -568,13 +590,19 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                     DocumentSnapshot document = task.getResult();
                     //"friends", FieldValue.arrayUnion(email))
                     if (document.exists()) {
-                        db.collection("UserProfiles").document(user.getEmail()).update("friends", FieldValue.arrayUnion(email));
-                        db.collection("UserProfiles").document(email).update("friends", FieldValue.arrayUnion(user.getEmail()));
-                        searchView.clearFocus();
-                        Toast.makeText(FriendsSheetActivity.this, "Friend Added!", Toast.LENGTH_SHORT).show();
-                        searchView.setQuery("", false);
-                        searchView.setIconified(true);
-                        fetchFriends();
+                        if(addFriend) {
+                            db.collection("UserProfiles").document(user.getEmail()).update("friends", FieldValue.arrayUnion(email));
+                            db.collection("UserProfiles").document(email).update("friends", FieldValue.arrayUnion(user.getEmail()));
+                            searchView.clearFocus();
+                            Toast.makeText(FriendsSheetActivity.this, "Friend Added!", Toast.LENGTH_SHORT).show();
+                            searchView.setQuery("", false);
+                            searchView.setIconified(true);
+                            fetchFriends();
+                        } else {
+                            db.collection("UserProfiles").document(user.getEmail()).update("friends", FieldValue.arrayRemove(email));
+                            db.collection("UserProfiles").document(email).update("friends", FieldValue.arrayRemove(user.getEmail()));
+                            fetchFriends();
+                        }
 
                     } else {
                         Toast.makeText(FriendsSheetActivity.this, "User does not exist", Toast.LENGTH_SHORT).show();
@@ -759,6 +787,26 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
 
 
         }
+        ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                String email = mFriends.remove(viewHolder.getAdapterPosition()).getEmail();
+                addFriend(email, false);
+
+                mFriendSheetAdapter.notifyDataSetChanged();
+            }
+        };
+
+
+
+
+
+
 
 
     }
@@ -776,10 +824,35 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
             holder.bind(mFriends.get(position));
         }
 
+        public void removeItem(int position) {
+            String removeFriend = mFriends.get(position).getEmail();
+            Log.d("REMOVE", removeFriend);
+            //mFriends.remove(position);
+
+        }
+
         @Override
         public int getItemCount() {
             return mFriends.size();
         }
+
+        ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                String email = mFriends.remove(viewHolder.getAdapterPosition()).getEmail();
+                addFriend(email, false);
+
+                mFriendSheetAdapter.notifyDataSetChanged();
+            }
+        };
+
+
+
     }
 
     //https://gist.github.com/julianshen/5829333
