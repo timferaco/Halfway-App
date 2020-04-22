@@ -79,7 +79,7 @@
             android:focusable="true"
             android:src="@drawable/ic_person_white_24dp"
             app:backgroundTint="#E91E63"
-            app:maxImageSize="64dp" />
+            app:maxImageSize="56dp" />
 
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 

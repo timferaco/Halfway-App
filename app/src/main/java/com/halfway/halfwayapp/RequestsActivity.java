@@ -158,18 +158,16 @@ public class RequestsActivity extends AppCompatActivity {
             primProfile = itemView.findViewById(R.id.prim_user_image);
             secProfilePic = itemView.findViewById(R.id.sec_user_image);
             timestamp = itemView.findViewById(R.id.timestamp);
-            pending = itemView.findViewById(R.id.pending_message);
 
         }
 
         public void bind(final RequestCard request) {
             prim.setText(request.getPrimaryUserID());
             sec.setText(request.getSecondaryUserID());
-            timestamp.setText(request.getTimestamp().toDate().toString());
             if(request.getMidpoint() == null) {
-                pending.setText("sent PENDING request to");
+                timestamp.setText("Pending:" + request.getTimestamp().toDate().toString());
             } else {
-                pending.setText("sent request to");
+                timestamp.setText(request.getTimestamp().toDate().toString());
 
             }
 

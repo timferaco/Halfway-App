@@ -668,7 +668,7 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                     }).addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_send_black_24dp));
+                            floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                         }
                     });
                 }
