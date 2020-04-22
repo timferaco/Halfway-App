@@ -56,6 +56,7 @@ import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
@@ -223,24 +224,25 @@ public class ChatActivity extends AppCompatActivity
 
 
                 viewHolder.messengerTextView.setText(friendlyMessage.getName());
-                if (friendlyMessage.getPhotoUrl() == null) {
-                    viewHolder.messengerImageView.setImageDrawable(ContextCompat.getDrawable(ChatActivity.this,
-                            R.drawable.ic_person_white_24dp));
-                } else {
-                    StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" +friendlyMessage.getEmail());
-                    storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                        @Override
-                        public void onSuccess(Uri uri) {
-                            if(uri != null) {
-                                Picasso.get().load(uri).transform(new FriendsSheetActivity.CircleTransform()).into(viewHolder.messengerImageView);
-                            } else {
 
-                            }
+                Log.d("PROFPIC", friendlyMessage.getEmail());
+                StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" +friendlyMessage.getEmail());
+                storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        Log.d("PROFPIC", "SUCCESS");
+                        Picasso.get().load(uri).transform(new FriendsSheetActivity.CircleTransform()).into(viewHolder.messengerImageView);
 
-                        }
-                    });
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.d("PROFPIC", "FAIL");
+                        viewHolder.messengerImageView.setImageDrawable(getResources().getDrawable(R.drawable.ic_send_black_24dp));
+                    }
+                });
 
-                }
+
 
             }
         };

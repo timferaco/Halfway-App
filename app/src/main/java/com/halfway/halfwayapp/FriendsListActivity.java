@@ -203,6 +203,7 @@ public class FriendsListActivity extends AppCompatActivity  {
         public void bind(final User user) {
 
             u_email.setText(user.getEmail());
+            prev_message.setText("Send a Message!");
 
             DatabaseReference mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
             mFirebaseAuth = FirebaseAuth.getInstance();

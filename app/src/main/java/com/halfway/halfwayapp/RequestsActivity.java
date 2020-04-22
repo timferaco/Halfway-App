@@ -25,6 +25,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
@@ -148,6 +149,7 @@ public class RequestsActivity extends AppCompatActivity {
         private CircleImageView primProfile;
         private CircleImageView secProfilePic;
         private TextView timestamp;
+        private TextView pending;
 
         public ReqHolder (@NonNull View itemView) {
             super(itemView);
@@ -156,6 +158,7 @@ public class RequestsActivity extends AppCompatActivity {
             primProfile = itemView.findViewById(R.id.prim_user_image);
             secProfilePic = itemView.findViewById(R.id.sec_user_image);
             timestamp = itemView.findViewById(R.id.timestamp);
+            pending = itemView.findViewById(R.id.pending_message);
 
         }
 
@@ -163,6 +166,12 @@ public class RequestsActivity extends AppCompatActivity {
             prim.setText(request.getPrimaryUserID());
             sec.setText(request.getSecondaryUserID());
             timestamp.setText(request.getTimestamp().toDate().toString());
+            if(request.getMidpoint() == null) {
+                pending.setText("sent PENDING request to");
+            } else {
+                pending.setText("sent request to");
+
+            }
 
             StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" +request.getPrimaryUserID());
             storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
@@ -177,6 +186,12 @@ public class RequestsActivity extends AppCompatActivity {
                 @Override
                 public void onSuccess(Uri uri) {
                     Picasso.get().load(uri).transform(new FriendsSheetActivity.CircleTransform()).into(secProfilePic);
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Log.d("PROFPIC", "FAIL");
+                    secProfilePic.setImageDrawable(getResources().getDrawable(R.drawable.ic_send_black_24dp));
                 }
             });
             final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
