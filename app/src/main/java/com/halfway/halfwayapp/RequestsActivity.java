@@ -87,45 +87,48 @@ public class RequestsActivity extends AppCompatActivity {
                 if (task.isSuccessful()) {
                     DocumentSnapshot document = task.getResult();
                     if(document.exists()) {
+
                         ArrayList<String> temp = new ArrayList<>();
 
                         temp = (ArrayList<String>) document.get("requests");
                         final ArrayList requestList = new ArrayList();
-                        for(int i = 0; i < temp.size(); i++) {
+                        if (temp != null) {
+                            for (int i = 0; i < temp.size(); i++) {
 
-                            db.document(temp.get(i)).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                db.document(temp.get(i)).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
 
-                                    if(task.isSuccessful()) {
-                                        DocumentSnapshot document = task.getResult();
+                                        if (task.isSuccessful()) {
+                                            DocumentSnapshot document = task.getResult();
 
-                                        if(document.exists()){
-                                            String docID = (String) document.get("docID");
-                                            GeoPoint primaryUserLocation = (GeoPoint) document.get("primaryUserLocation");
-                                            GeoPoint secondaryUserLocation = (GeoPoint) document.get("secondaryUserLocation");
-                                            String primaryUserID = (String) document.get("primaryUserEmail");
-                                            String secondaryUserID = (String) document.get("secondaryUserEmail");
-                                            GeoPoint midpoint = (GeoPoint) document.get("midpoint");
-                                            Timestamp timestamp = (Timestamp) document.get("timestamp");
-                                            Log.d("TIMESTAMP", timestamp.toString());
+                                            if (document.exists()) {
+                                                String docID = (String) document.get("docID");
+                                                GeoPoint primaryUserLocation = (GeoPoint) document.get("primaryUserLocation");
+                                                GeoPoint secondaryUserLocation = (GeoPoint) document.get("secondaryUserLocation");
+                                                String primaryUserID = (String) document.get("primaryUserEmail");
+                                                String secondaryUserID = (String) document.get("secondaryUserEmail");
+                                                GeoPoint midpoint = (GeoPoint) document.get("midpoint");
+                                                Timestamp timestamp = (Timestamp) document.get("timestamp");
+                                                Log.d("TIMESTAMP", timestamp.toString());
 
-                                            requestList.add(new RequestCard(docID, primaryUserID, primaryUserLocation, secondaryUserID, secondaryUserLocation, midpoint, timestamp));
+                                                requestList.add(new RequestCard(docID, primaryUserID, primaryUserLocation, secondaryUserID, secondaryUserLocation, midpoint, timestamp));
 
 
-                                            //User temp = new User(document.get("email").toString(), document.get("photoURL").toString(), document.get("name").toString());
-                                            //tempUsers.add(temp);
-                                            //Log.d("!!!Temp", String.valueOf(tempUsers.size()));
-                                        } else {
-                                            //No Exists
+                                                //User temp = new User(document.get("email").toString(), document.get("photoURL").toString(), document.get("name").toString());
+                                                //tempUsers.add(temp);
+                                                //Log.d("!!!Temp", String.valueOf(tempUsers.size()));
+                                            } else {
+                                                //No Exists
+                                            }
                                         }
+                                        Collections.sort(requestList, RequestCard.timeStampComparator);
+                                        mRequests = requestList;
+                                        mReqAdapter.notifyDataSetChanged();
                                     }
-                                    Collections.sort(requestList, RequestCard.timeStampComparator);
-                                    mRequests = requestList;
-                                    mReqAdapter.notifyDataSetChanged();
-                                }
-                            });
+                                });
 
+                            }
                         }
                     }
 

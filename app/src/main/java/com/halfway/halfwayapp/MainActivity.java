@@ -21,6 +21,7 @@ import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -191,7 +192,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_send_black_24dp));
+                    floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                 }
             });;
             updateUserProfile();
@@ -237,14 +238,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     }).addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            prof_picture.setImageDrawable(getResources().getDrawable(R.drawable.ic_send_black_24dp));
-                            floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_send_black_24dp));
+                            prof_picture.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
+                            floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                         }
                     });;
                 }
             }
         });
         drawerLayout.closeDrawers();
+
+
 
 
 
