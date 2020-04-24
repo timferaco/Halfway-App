@@ -14,8 +14,17 @@
   },
   "main": "lib/index.js",
   "dependencies": {
+<<<<<<< Updated upstream
+=======
+    "@google/maps": "^1.1.0",
+    "@googlemaps/google-maps-services-js": "^2.6.0",
+    "@types/google__maps": "^0.5.12",
+    "@types/node": "^13.13.2",
+    "firebase": "^7.14.2",
+>>>>>>> Stashed changes
     "firebase-admin": "^8.6.0",
-    "firebase-functions": "^3.3.0"
+    "firebase-functions": "^3.6.1",
+    "google-maps": "^4.2.3"
   },
   "devDependencies": {
     "tslint": "^5.12.0",
