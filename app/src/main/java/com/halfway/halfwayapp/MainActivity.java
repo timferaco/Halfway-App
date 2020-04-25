@@ -438,9 +438,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         protected String doInBackground(Void... voids) {
 
             Request request = new Request.Builder()
-                    .url("https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location="+ getIntent().getStringExtra("latitude") + "," + getIntent().getStringExtra("longitude") +"&radius=100000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ")
+                    .url("https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location="+ getIntent().getStringExtra("latitude") + "," + getIntent().getStringExtra("longitude") +"&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ")
                     .build();
-            Log.d("Request", "https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location="+ getIntent().getStringExtra("latitude") + "," + getIntent().getStringExtra("longitude") +"&radius=100000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ");
+            Log.d("Request", "https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location="+ getIntent().getStringExtra("latitude") + "," + getIntent().getStringExtra("longitude") +"&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ");
             try (Response response = mHTTPClient.newCall(request).execute()) {
                 Log.d("CALL", "doInBackground: making call to Google API");
                 return response.body().string();

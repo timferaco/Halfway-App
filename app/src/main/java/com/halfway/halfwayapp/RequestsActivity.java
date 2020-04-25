@@ -226,7 +226,6 @@ public class RequestsActivity extends AppCompatActivity {
                                                                     launchRequests.putExtra("latitude", midpointString[0]);
                                                                     launchRequests.putExtra("longitude", midpointString[1]);
                                                                     startActivity(tempLaunchRequests);
-                                                                    Log.d("THIS HAS RESPONDED", result);
                                                                     return result;
                                                                 }
                                                             });
