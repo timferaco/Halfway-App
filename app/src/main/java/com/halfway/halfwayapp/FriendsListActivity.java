@@ -6,49 +6,32 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import io.opencensus.trace.MessageEvent;
-
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-
-import com.firebase.ui.database.FirebaseRecyclerOptions;
-import com.firebase.ui.database.SnapshotParser;
-import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.GetTokenResult;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Objects;
 
 
 public class FriendsListActivity extends AppCompatActivity  {
@@ -69,27 +52,17 @@ public class FriendsListActivity extends AppCompatActivity  {
         mUserRecycler.setLayoutManager(new LinearLayoutManager(this));
         mUserRecycler.setAdapter(mUserAdapter);
 
-        mUserRecycler.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-            }
-        });
-
-
-
         mUsers = new ArrayList<User>();
         db = FirebaseFirestore.getInstance();
 
+        //Load Recycler View
         fetchFriends();
 
+        //Add Decor
         DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
         mUserRecycler.addItemDecoration(itemDecor);
-
         mUserAdapter.notifyDataSetChanged();
     }
-
-
 
     private void fetchFriends(){
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -99,23 +72,19 @@ public class FriendsListActivity extends AppCompatActivity  {
                     if (task.isSuccessful()) {
                         DocumentSnapshot document = task.getResult();
                         if(document.exists()) {
-                            ArrayList<String> temp = new ArrayList<>();
-
-                            temp = (ArrayList<String>) document.get("friends");
+                            ArrayList<String> temp = (ArrayList<String>) document.get("friends");
                             final ArrayList tempUsers = new ArrayList();
+                            //Loop through friendsList
                             for(int i = 0; i < temp.size(); i++) {
-
                                 db.collection("UserProfiles").document(temp.get(i)).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                                     @Override
                                     public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-
                                         if(task.isSuccessful()) {
                                             DocumentSnapshot document = task.getResult();
-
                                             if(document.exists()){
+                                                //Create a new User for RecyclerView
                                                 User temp = new User(document.get("email").toString(),  document.get("name").toString());
                                                 tempUsers.add(temp);
-                                                Log.d("!!!Temp", String.valueOf(tempUsers.size()));
                                             } else {
                                                 //No Exists
                                             }
@@ -127,52 +96,12 @@ public class FriendsListActivity extends AppCompatActivity  {
 
                             }
                         }
-
                         } else {
                             //Document Doesn't Exist
                         }
-
                 }
             });
     }
-
-    /*
-    new OnCompleteListener<QuerySnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<QuerySnapshot> task) {
-
-
-
-                        }
-                        mUsers = tempUsers;
-                        mUserAdapter.notifyDataSetChanged();
-
-                    } else {
-                        Log.w("ACCESS_ERROR", "Error getting documents.", task.getException());
-                    }
-                }
-            });
-
-
-    db.collection("UserProfiles").document(email).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                                    if(task.isSuccessful()) {
-                                        DocumentSnapshot document = task.getResult();
-                                        if(document.exists()){
-                                            User temp = new User(document.get("email").toString(), document.get("photoURL").toString(), document.get("name").toString());
-                                            tempUsers.add(temp);
-                                            Log.d("!!!Temp", String.valueOf(tempUsers.size()));
-                                        } else {
-                                            //No Exists
-                                        }
-                                    }
-                                    mUsers = tempUsers;
-                                    mUserAdapter.notifyDataSetChanged();
-                                }
-                            });
-
-     */
 
     private class UserHolder extends RecyclerView.ViewHolder {
         private ImageView prof_pic;
@@ -208,7 +137,7 @@ public class FriendsListActivity extends AppCompatActivity  {
             DatabaseReference mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
             mFirebaseAuth = FirebaseAuth.getInstance();
             mFirebaseUser = mFirebaseAuth.getCurrentUser();
-
+            //Sets user Image
             StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" +user.getEmail());
             storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                 @Override
@@ -219,11 +148,11 @@ public class FriendsListActivity extends AppCompatActivity  {
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    prof_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_send_black_24dp));
+                    prof_pic.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_black_24dp));
                 }
             });
 
-
+            //Takes the most recent message to display
             final String messagesChild = getMessagesChild(mFirebaseUser.getEmail(), user.getEmail());
             DatabaseReference messagesRef = mFirebaseDatabaseReference.child(messagesChild);
             itemView.setOnClickListener(new View.OnClickListener() {
@@ -232,11 +161,11 @@ public class FriendsListActivity extends AppCompatActivity  {
                     Intent launchChat = new Intent(getBaseContext(), ChatActivity.class);
                     launchChat.putExtra("EMAIL", user.getEmail());
                     launchChat.putExtra("MESSAGES_CHILD", getMessagesChild(mFirebaseUser.getEmail(), user.getEmail()));
-                    Log.d("SCRATUSEREMAIL", messagesChild);
                     startActivity(launchChat);
                 }
             });
 
+            //Addchildevent listener to update the last message sent
             messagesRef.addChildEventListener(new ChildEventListener() {
                 @Override
                 public void onChildAdded(@NonNull DataSnapshot dataSnapshot, @Nullable String s) {
@@ -263,14 +192,10 @@ public class FriendsListActivity extends AppCompatActivity  {
 
                 }
             });
-
         }
-
-
     }
 
     private class UserAdapter extends RecyclerView.Adapter<FriendsListActivity.UserHolder> {
-
         @NonNull
         @Override
         public FriendsListActivity.UserHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -282,13 +207,9 @@ public class FriendsListActivity extends AppCompatActivity  {
         public void onBindViewHolder(@NonNull FriendsListActivity.UserHolder holder, int position) {
             holder.bind(mUsers.get(position));
         }
-
         @Override
         public int getItemCount() {
             return mUsers.size();
         }
-
-
     }
-
 }

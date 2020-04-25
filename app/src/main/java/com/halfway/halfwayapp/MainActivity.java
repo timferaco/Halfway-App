@@ -11,7 +11,6 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
-
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
@@ -20,23 +19,17 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserProfileChangeRequest;
-import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-
-import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Transformation;
-
 import androidx.core.view.GravityCompat;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapShader;
@@ -56,28 +49,21 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import de.hdodenhof.circleimageview.CircleImageView;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.drawerlayout.widget.DrawerLayout;
-
 import android.widget.Toast;
-
 import com.google.android.material.navigation.NavigationView;
 
 
@@ -86,29 +72,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private RecyclerView mPlaceRecycler;
     private PlaceAdapter mPlaceAdapter;
     private FloatingActionButton floatingActionButton;
-
     private ArrayList<PlaceCard> mPlaces;
     private OkHttpClient mHTTPClient;
     private FusedLocationProviderClient fusedLocationClient;
-
     private TextView prof_email;
     private TextView prof_display_name;
     private CircleImageView prof_picture;
     private FirebaseFirestore db;
-
     DrawerLayout drawerLayout;
     NavigationView navigationView;
-    private LatLng currentLocation;
-
-
     private GoogleMap mMap;
-
-    final private String MAPS_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json?&location=";
-    final private String RESPONSE_TAG = "com.halfway.response";
     private static final int RC_SIGN_IN = 123;
     private static final int PICK_IMAGE = 100;
-    protected LocationManager locationManager;
-    protected LocationListener locationListener;
 
 
     @Override
@@ -121,16 +96,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         navigationView = findViewById(R.id.navigationView);
         floatingActionButton = findViewById(R.id.floatingActionButton);
 
-        currentLocation = new LatLng(0, 0);
-        getCurrentLocation();
-
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
-
-
-        Log.d("Location!:", String.valueOf(currentLocation.latitude));
-
-
         navigationView.bringToFront();
         navigationView.setNavigationItemSelectedListener(MainActivity.this);
 
@@ -146,29 +112,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mPlaceAdapter = new PlaceAdapter();
         mPlaceRecycler = findViewById(R.id.places_recycler);
         mPlaceRecycler.setLayoutManager(new LinearLayoutManager(this));
-
-
         DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
         mPlaceRecycler.addItemDecoration(itemDecor);
-
         mPlaces = new ArrayList<PlaceCard>();
         mHTTPClient = new OkHttpClient();
 
         //Fills Recycler Views
-
-        Log.d("HEY!", getIntent().getStringExtra("latitude"));
-
         if(getIntent().getStringExtra("latitude").equals("null")) {
-            Log.d("HEY! THEY DIDNT ACCEPT", "SAD");
             Toast.makeText(getApplicationContext(), "The other user has not responded to your request", Toast.LENGTH_LONG).show();
         } else {
             mPlaceRecycler.setAdapter(mPlaceAdapter);
             refresh();
         }
-
-
-        //User Location setup
-
 
         // Firebase Setup
         db = FirebaseFirestore.getInstance();
@@ -177,7 +132,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if (user != null) {
             // Grabs profile picture
-            floatingActionButton = findViewById(R.id.floatingActionButton);
             floatingActionButton = findViewById(R.id.floatingActionButton);
             prof_picture = findViewById(R.id.profilePic);
             StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" +user.getEmail());
@@ -197,7 +151,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             });;
             updateUserProfile();
 
-
         } else {
             //No user sign in
             List<AuthUI.IdpConfig> providers = Arrays.asList(
@@ -213,7 +166,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     RC_SIGN_IN);
         }
 
-        //Sets up Drawer
+        //Set up Drawer open on FAB hit
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -227,31 +180,20 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     prof_email.setText(user.getEmail());
                     prof_display_name.setText(user.getDisplayName());
 
-
-                    StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" +user.getEmail());
+                    StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" + user.getEmail());
                     storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                         @Override
                         public void onSuccess(Uri uri) {
                             Picasso.get().load(uri).transform(new FriendsSheetActivity.CircleTransform()).into(prof_picture);
-                            Picasso.get().load(uri).transform(new FriendsSheetActivity.CircleTransform()).into(floatingActionButton);
                         }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            prof_picture.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
-                            floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
-                        }
-                    });;
+                    });
                 }
             }
         });
+        //Close Drawer for onCreate
         drawerLayout.closeDrawers();
-
-
-
-
-
     }
+
 
     public void updateUserProfile() {
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -278,13 +220,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         db.collection("UserProfiles").document(user.getEmail()).set(profile);
                     }
                 }
-
-
             }
         });
     }
-
-
 
     /**
      * Manipulates the map when it's available.
@@ -312,107 +250,86 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                             }
                         }
                     });
-
         }
-
-
     }
 
+    //Set up Menu
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        //If there is no user launch login
+        if(user == null) {
+            //Launch log in activity
+            launchLogin();
+        }
+
         switch (menuItem.getItemId()) {
             case R.id.log_out:
-                if (user != null) {
-                    AuthUI.getInstance()
-                            .signOut(this)
-                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    // ...
-                                }
-                            });
-
-                    floatingActionButton = findViewById(R.id.floatingActionButton);
-                    floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
-
-                    //Launch log in activity
-                    List<AuthUI.IdpConfig> providers = Arrays.asList(
-                            new AuthUI.IdpConfig.EmailBuilder().build());
-
-                    startActivityForResult(
-                            AuthUI.getInstance()
-                                    .createSignInIntentBuilder()
-                                    .setLogo(R.drawable.logo1x)
-                                    .setAvailableProviders(providers)
-                                    .build(),
-                            RC_SIGN_IN);
-                }
+                //Signout from AuthUI
+                AuthUI.getInstance()
+                        .signOut(this)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            public void onComplete(@NonNull Task<Void> task) {
+                                // ...
+                            }
+                        });
+                launchLogin();
                 break;
+
             case R.id.change_picture:
-                //Checks to see if a user is logged in
-                if (user != null) {
-                    Intent gallery =
-                            new Intent(Intent.ACTION_OPEN_DOCUMENT,
-                                    android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
-                    startActivityForResult(gallery, PICK_IMAGE);
-                    //https://scontent.fbtv1-1.fna.fbcdn.net/v/t31.0-8/s960x960/10679591_648893885224134_7166029734996188708_o.jpg?_nc_cat=110&_nc_sid=da1649&_nc_ohc=ioKCYq4xVOUAX9q5rm4&_nc_ht=scontent.fbtv1-1.fna&_nc_tp=7&oh=f4fc4628684bad08b6e2f8c41890816f&oe=5EA64EB2
-                } else {
-                    // No user is signed in
-                }
+                //Launch gallery Intent
+                Intent gallery =
+                        new Intent(Intent.ACTION_GET_CONTENT, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
+                gallery.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                startActivityForResult(gallery, PICK_IMAGE);
+                //https://scontent.fbtv1-1.fna.fbcdn.net/v/t31.0-8/s960x960/10679591_648893885224134_7166029734996188708_o.jpg?_nc_cat=110&_nc_sid=da1649&_nc_ohc=ioKCYq4xVOUAX9q5rm4&_nc_ht=scontent.fbtv1-1.fna&_nc_tp=7&oh=f4fc4628684bad08b6e2f8c41890816f&oe=5EA64EB2
                 break;
             case R.id.del_acct:
                 // Get auth credentials from the user for re-authentication. The example below shows
-// email and password credentials but there are multiple possible providers,
-// such as GoogleAuthProvider or FacebookAuthProvider.
+                // email and password credentials but there are multiple possible providers,
+                // such as GoogleAuthProvider or FacebookAuthProvider.
                 AuthCredential credential = EmailAuthProvider
                         .getCredential("user@example.com", "password1234");
 
-// Prompt the user to re-provide their sign-in credentials
+                // Prompt the user to re-provide their sign-in credentials
                 user.reauthenticate(credential)
                         .addOnCompleteListener(new OnCompleteListener<Void>() {
                             @Override
                             public void onComplete(@NonNull Task<Void> task) {
-                                Log.d("!!!ONCOMPLETE", "naw");
                                 //Firebase Listener to Delete account
                                 db.collection("UserProfiles").document(user.getEmail()).get().addOnSuccessListener(
                                         new OnSuccessListener<DocumentSnapshot>() {
                                             @Override
                                             public void onSuccess(DocumentSnapshot documentSnapshot) {
                                                 if (documentSnapshot.exists()) {
+                                                    //Get List of Friends
                                                     ArrayList<String> friends = (ArrayList) documentSnapshot.get("friends");
-                                                    Log.d("!!!ONCOMPLETEFRIENDS ", String.valueOf(friends.size()));
-                                                    if(friends != null) {
+                                                    if (friends != null) {
                                                         for (int i = 0; i < friends.size(); i++) {
-                                                            Log.d("!!!ONCOMPLETEFRIEND!!", friends.get(i).toString());
+                                                            //Remove all references to you as a friend on others profiles
                                                             db.collection("UserProfiles").document(friends.get(i)).update("friends", FieldValue.arrayRemove(documentSnapshot.get("email")));
                                                         }
                                                     }
+                                                    //Gets all requests
                                                     ArrayList<String> requests = (ArrayList) documentSnapshot.get("requests");
-                                                    if(requests != null) {
+                                                    if (requests != null) {
                                                         for (int i = 0; i < requests.size(); i++) {
+                                                            //Removes all requests
                                                             db.document(requests.get(i)).delete();
                                                         }
                                                     }
+                                                    //Deletes the user's profile picture
                                                     FirebaseStorage.getInstance().getReference("profilePictures/" + user.getEmail()).delete();
+                                                    //Deletes the user profile
                                                     db.collection("UserProfiles").document(user.getEmail()).delete();
-                                                    //Firebase Listener to Delete account
-                                                    Log.d("USERRR", user.getEmail());
+                                                    //Deletes the FirebaseAuth Account
                                                     user.delete()
                                                             .addOnCompleteListener(new OnCompleteListener<Void>() {
                                                                 @Override
                                                                 public void onComplete(@NonNull Task<Void> task) {
                                                                     if (task.isSuccessful()) {
                                                                         Log.d("Deleted", "User account deleted.");
-                                                                        //Launch log in activity
-                                                                        List<AuthUI.IdpConfig> providers = Arrays.asList(
-                                                                                new AuthUI.IdpConfig.EmailBuilder().build());
-                                                                        startActivityForResult(
-                                                                                AuthUI.getInstance()
-                                                                                        .createSignInIntentBuilder()
-                                                                                        .setLogo(R.drawable.logo1x)
-                                                                                        .setAvailableProviders(providers)
-                                                                                        .build(),
-                                                                                RC_SIGN_IN);
+                                                                        launchLogin();
                                                                     }
                                                                 }
                                                             });
@@ -421,15 +338,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                         });
                             }
                         });
-                List<AuthUI.IdpConfig> providers = Arrays.asList(
-                        new AuthUI.IdpConfig.EmailBuilder().build());
-                startActivityForResult(
-                        AuthUI.getInstance()
-                                .createSignInIntentBuilder()
-                                .setLogo(R.drawable.logo1x)
-                                .setAvailableProviders(providers)
-                                .build(),
-                        RC_SIGN_IN);
+                launchLogin();
                 break;
             case R.id.requests:
                 Intent launchReqs = new Intent(this, RequestsActivity.class);
@@ -447,71 +356,43 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         return false;
     }
 
-    public void getCurrentLocation(){
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        // Got last known location. In some rare situations this can be null.
-                        if (location != null) {
-                            currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                        }
-                    }
-                });
+    public void launchLogin() {
+        //Launch log in activity
+        List<AuthUI.IdpConfig> providers = Arrays.asList(
+                new AuthUI.IdpConfig.EmailBuilder().build());
 
+        startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setLogo(R.drawable.logo1x)
+                        .setAvailableProviders(providers)
+                        .build(),
+                RC_SIGN_IN);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-
+        //User Chooses new Image
         if (resultCode == RESULT_OK && requestCode == PICK_IMAGE) {
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
-
-            Log.d("PHOTO!!", data.getDataString());
-            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                    .setPhotoUri(Uri.parse(data.getDataString()))
-                    .build();
-
-            //Updates user's photo with UpdataProfile
-            user.updateProfile(profileUpdates)
-                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            if (task.isSuccessful()) {
-                                Log.d("Updated", "User profile updated.");
-                                floatingActionButton = findViewById(R.id.floatingActionButton);
-                                prof_picture = findViewById(R.id.profilePic);
-                                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                                Log.d("PhotoURL2", user.getPhotoUrl().toString());
-                                Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(prof_picture);
-                                Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
-
-                                Map<String, Object> profile = new HashMap<>();
-                                profile.put("photoURL", user.getPhotoUrl().toString());
-
-                                db.collection("UserProfiles").document(user.getEmail()).update(profile);
-                            }
-
-                        }
-                    });
+            FirebaseStorage storageRef = FirebaseStorage.getInstance();
+            //Upload photoRef to profile
+            StorageReference photoRef = storageRef.getReference("profilePictures/" + user.getEmail());
+            photoRef.putFile(data.getData());
+            //Load new Profile Picture
+            Picasso.get().load(data.getData()).transform(new FriendsSheetActivity.CircleTransform()).into(prof_picture);
+            Picasso.get().load(data.getData()).transform(new FriendsSheetActivity.CircleTransform()).into(floatingActionButton);
         }
         //Sign in Results
-
         if (requestCode == RC_SIGN_IN) {
             IdpResponse response = IdpResponse.fromResultIntent(data);
-
             if (resultCode == RESULT_OK) {
-
-                // Successfully signed in
+                //User Sign in
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                floatingActionButton = findViewById(R.id.floatingActionButton);
 
                 //Checks to see if user's email is Verified.
-                if(!user.isEmailVerified()) {
+                if (!user.isEmailVerified()) {
                     user.sendEmailVerification()
                             .addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
@@ -522,26 +403,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                 }
                             });
                 }
-                String tempPhotoURL;
 
-                //Pulls from Database if there is a photo, otherwise sets to null white profile
-                if(user.getPhotoUrl() == null) {
-                    floatingActionButton = findViewById(R.id.floatingActionButton);
-                    floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
-                } else {
-                    Log.d("PHOTOURL", user.getPhotoUrl().toString());
-                    Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(prof_picture);
-                    Picasso.get().load(user.getPhotoUrl()).transform(new CircleTransform()).into(floatingActionButton);
-                }
+                floatingActionButton = findViewById(R.id.floatingActionButton);
+                StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" + user.getEmail());
+                storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        Picasso.get().load(uri).transform(new FriendsSheetActivity.CircleTransform()).into(floatingActionButton);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
+                    }
+                });
 
-
-                //Update UserProfiles
-                Map<String, Object> profile = new HashMap<>();
-                ArrayList<String> friends = new ArrayList<>();
-                profile.put("name", user.getDisplayName());
-                profile.put("email", user.getEmail());
-
-                db.collection("UserProfiles").document(user.getEmail()).update(profile);
+                updateUserProfile();
+                drawerLayout.closeDrawers();
 
             } else {
                 // Sign in failed. If response is null the user canceled the

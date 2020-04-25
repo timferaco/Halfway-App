@@ -1,27 +1,18 @@
 package com.halfway.halfwayapp;
 
-
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.content.ContentResolver;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapShader;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.net.Uri;
-import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.SearchView;
@@ -29,10 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -40,7 +28,6 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.IdpResponse;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -60,67 +47,42 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserProfileChangeRequest;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.squareup.picasso.Picasso;
 import com.squareup.picasso.Transformation;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import de.hdodenhof.circleimageview.CircleImageView;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+
 
 
 public class FriendsSheetActivity extends AppCompatActivity implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener {
-
+    //Layout Initializers
     private RecyclerView mFriendSheetRecycler;
     private FriendAdapter mFriendSheetAdapter;
     private FloatingActionButton floatingActionButton;
-
     private ArrayList<User> mFriends;
-    private OkHttpClient mHTTPClient;
     private FusedLocationProviderClient fusedLocationClient;
-
     private TextView prof_email;
     private TextView prof_display_name;
     private CircleImageView prof_picture;
     private FirebaseFirestore db;
-
     DrawerLayout drawerLayout;
     NavigationView navigationView;
     SearchView searchView;
     private LatLng currentLocation;
-
     private GoogleMap mMap;
-
-    final private String MAPS_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json?&location=";
-    final private String RESPONSE_TAG = "com.halfway.response";
     private static final int RC_SIGN_IN = 123;
     private static final int PICK_IMAGE = 100;
-    protected LocationManager locationManager;
-    protected LocationListener locationListener;
 
 
     @Override
@@ -128,17 +90,19 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_friends_sheet);
 
-//Updates Left Drawer
+        //Initialize Layout
         drawerLayout = findViewById(R.id.drawer);
         navigationView = findViewById(R.id.navigationView);
         floatingActionButton = findViewById(R.id.floatingActionButton);
+        navigationView.bringToFront();
+        navigationView.setNavigationItemSelectedListener(FriendsSheetActivity.this);
         searchView = findViewById(R.id.friends_search);
 
-        createNotificationChannel();
-
+        //Set Search View
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String s) {
+                //True adds friend, false removes friend
                 addFriend(s, true);
                 return true;
             }
@@ -149,27 +113,19 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
             }
         });
 
-
-        currentLocation = new LatLng(0, 0);
-        getCurrentLocation();
-        Log.d("Location!:", String.valueOf(currentLocation.latitude));
-
-
-        navigationView.bringToFront();
-        navigationView.setNavigationItemSelectedListener(FriendsSheetActivity.this);
-
-        db = FirebaseFirestore.getInstance();
-
-// Get the SupportMapFragment and register for the callback
-// when the map is ready for use.
+        // Get the SupportMapFragment and register for the callback
+        // when the map is ready for use.
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getSupportFragmentManager()
                         .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        //Set up bottom sheet of Friends
         mFriendSheetAdapter = new FriendAdapter();
         mFriendSheetRecycler = findViewById(R.id.friends_sheet_recycler);
         mFriendSheetRecycler.setLayoutManager(new LinearLayoutManager(this));
+
+        //Add Swipe to delete friend gesture
         ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
@@ -178,32 +134,28 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
 
             @Override
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                //Remove friend from list
                 String email = mFriends.remove(viewHolder.getAdapterPosition()).getEmail();
                 addFriend(email, false);
-
                 Toast.makeText(getApplicationContext(), "Friend Deleted", Toast.LENGTH_SHORT).show();
-
                 mFriendSheetAdapter.notifyDataSetChanged();
             }
         };
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(mFriendSheetRecycler);
-
-
-
         mFriendSheetRecycler.setAdapter(mFriendSheetAdapter);
 
+        //Add decor
         DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
         mFriendSheetRecycler.addItemDecoration(itemDecor);
 
         mFriends = new ArrayList<User>();
-        mHTTPClient = new OkHttpClient();
 
-
-// Firebase Setup
+        // Firebase Setup
         db = FirebaseFirestore.getInstance();
-//Checks to see if there is a current user
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
+        //Checks to see if there is a current user
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        //Start Loading info if user is logged in
         if (user != null) {
             // Grabs profile picture
             floatingActionButton = findViewById(R.id.floatingActionButton);
@@ -218,26 +170,17 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
 
                 }
             });
-
+            //Keeps Database up to date with user profile images and names
             updateUserProfile();
+            //Fetch friends for Recycler
             fetchFriends();
 
         } else {
-            //No user sign in
-            List<AuthUI.IdpConfig> providers = Arrays.asList(
-                    new AuthUI.IdpConfig.EmailBuilder().build(),
-                    new AuthUI.IdpConfig.GoogleBuilder().build());//Google Login doesn't work yet, but it adds the logo on the choose provider screen
-
-            startActivityForResult(
-                    AuthUI.getInstance()
-                            .createSignInIntentBuilder()
-                            .setLogo(R.drawable.logo1x)
-                            .setAvailableProviders(providers)
-                            .build(),
-                    RC_SIGN_IN);
+            //No user Logged in
+            launchLogin();
         }
 
-//Sets up Drawer
+        //Set up Drawer open on FAB hit
         floatingActionButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -251,81 +194,24 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                     prof_email.setText(user.getEmail());
                     prof_display_name.setText(user.getDisplayName());
 
-
                     StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" + user.getEmail());
                     storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                         @Override
                         public void onSuccess(Uri uri) {
                             Picasso.get().load(uri).transform(new CircleTransform()).into(prof_picture);
-                            Picasso.get().load(uri).transform(new CircleTransform()).into(floatingActionButton);
                         }
                     });
                 }
             }
         });
+        //Close Drawer for onCreate
         drawerLayout.closeDrawers();
-        /*
-        final DocumentReference docRef = db.collection("UserProfiles").document(user.getEmail());
-        docRef.addSnapshotListener(new EventListener<DocumentSnapshot>() {
-            @Override
-            public void onEvent(@Nullable DocumentSnapshot snapshot,
-                                @Nullable FirebaseFirestoreException e) {
-                if (e != null) {
-                    //Log.w(TAG, "Listen failed.", e);
-                    return;
-                }
-
-                if (snapshot != null && snapshot.exists()) {
-                    Log.d("FRIEND ADDED", "Current data: " + snapshot.getData());
-                    Log.d("FRIEND ADDED", "PLS");
-                    NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), "CHANNELID").setSmallIcon(R.id.icon_only)
-                        .setContentTitle("My notification")
-                        .setContentText("Much longer text that cannot fit one line...")
-                        .setStyle(new NotificationCompat.BigTextStyle()
-                                .bigText("Much longer text that cannot fit one line..."))
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT);
-
-                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(getApplicationContext());
-
-                    // notificationId is a unique int for each notification that you must define
-                    notificationManager.notify(213213, builder.build());
-
-
-
-                } else {
-                    //Log.d(TAG, "Current data: null");
-                }
-            }
-        });
-        */
-
-
-
-
-
-
-
     }
-    //https://developer.android.com/training/notify-user/build-notification#java
-    private void createNotificationChannel() {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "CHANNELID";
-            String description = "description";
-            int importance = NotificationManager.IMPORTANCE_DEFAULT;
-            NotificationChannel channel = new NotificationChannel("CHANNELID", name, importance);
-            channel.setDescription(description);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
-        }
-    }
+
 
     public void updateUserProfile() {
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-//Update UserProfiles
+        //Update UserProfiles to be consistant with firebase auth
 
         db.collection("UserProfiles").document(user.getEmail()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
@@ -334,7 +220,6 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                     DocumentSnapshot document = task.getResult();
                     if (document.exists()) {
                         Map<String, Object> profile = new HashMap<>();
-                        ArrayList<String> friends = new ArrayList<>();
                         profile.put("name", user.getDisplayName());
                         profile.put("email", user.getEmail());
                         db.collection("UserProfiles").document(user.getEmail()).update(profile);
@@ -354,52 +239,52 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
         });
     }
 
+
     private void fetchFriends() {
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+        //Looks into the current Users Profile
         db.collection("UserProfiles").document(user.getEmail()).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                 if (task.isSuccessful()) {
                     DocumentSnapshot document = task.getResult();
                     if (document.exists()) {
-                        ArrayList<String> temp = new ArrayList<>();
-
-                        temp = (ArrayList<String>) document.get("friends");
+                        //If successful and document exists pull the friends arrayList
+                        ArrayList<String> temp = (ArrayList<String>) document.get("friends");
                         final ArrayList tempUsers = new ArrayList();
-                        for (int i = 0; i < temp.size(); i++) {
 
-                            db.collection("UserProfiles").document(temp.get(i)).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                                @Override
-                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-
-                                    if (task.isSuccessful()) {
-                                        DocumentSnapshot document = task.getResult();
-
-                                        if (document.exists()) {
-                                            User temp = new User(document.get("email").toString(), document.get("name").toString());
-                                            tempUsers.add(temp);
-                                            Log.d("!!!Temp", String.valueOf(tempUsers.size()));
-                                        } else {
-                                            //No Exists
+                        //Loops through each friend's information
+                        if(temp != null) {
+                            for (int i = 0; i < temp.size(); i++) {
+                                db.collection("UserProfiles").document(temp.get(i)).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                    @Override
+                                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                        if (task.isSuccessful()) {
+                                            DocumentSnapshot document = task.getResult();
+                                            if (document.exists()) {
+                                                //If the Friend is found, update the user Information in the friends adapter
+                                                User temp = new User(document.get("email").toString(), document.get("name").toString());
+                                                tempUsers.add(temp);
+                                            } else {
+                                                //No Exists
+                                            }
                                         }
+                                        //Update the Friends adapter
+                                        mFriends = tempUsers;
+                                        mFriendSheetAdapter.notifyDataSetChanged();
                                     }
-                                    mFriends = tempUsers;
-                                    mFriendSheetAdapter.notifyDataSetChanged();
-                                }
-                            });
-
+                                });
+                            }
                         }
                     }
-
                 } else {
-                    //Document Doesn't Exist
+                    Log.d("No Friends", ":(");
                 }
 
             }
         });
     }
-
-
 
     /**
      * Manipulates the map when it's available.
@@ -408,33 +293,54 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
     @Override
     public void onMapReady(final GoogleMap googleMap) {
         mMap = googleMap;
-//Todo: Get Current Location
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         mMap.setMyLocationEnabled(true);
+        //Get Current Location for Users
         fusedLocationClient.getLastLocation()
                 .addOnSuccessListener(this, new OnSuccessListener<Location>() {
                     @Override
                     public void onSuccess(Location location) {
                         // Got last known location. In some rare situations this can be null.
                         if (location != null) {
-                            Log.d("CurrentLocationLat", String.valueOf(currentLocation.latitude));
-                            Log.d("CurrentLocationLong", String.valueOf(currentLocation.longitude));
                             currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
                             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15));
                         } else {
-                            mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLocation));
+                            mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(0,0)));
+                            Toast.makeText(getApplicationContext(), "Current Location not Found", Toast.LENGTH_LONG).show();
                         }
                     }
                 });
 
     }
 
+    public void launchLogin() {
+        //Launch log in activity
+        List<AuthUI.IdpConfig> providers = Arrays.asList(
+                new AuthUI.IdpConfig.EmailBuilder().build());
+
+        startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setLogo(R.drawable.logo1x)
+                        .setAvailableProviders(providers)
+                        .build(),
+                RC_SIGN_IN);
+    }
+
+
+    //Set up Menu
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        //If there is no user launch login
+        if(user == null) {
+            //Launch log in activity
+            launchLogin();
+        }
+
         switch (menuItem.getItemId()) {
-            case R.id.log_out:
-                if (user != null) {
+                case R.id.log_out:
+                    //Signout from AuthUI
                     AuthUI.getInstance()
                             .signOut(this)
                             .addOnCompleteListener(new OnCompleteListener<Void>() {
@@ -442,88 +348,63 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                                     // ...
                                 }
                             });
+                    launchLogin();
+            break;
 
-                    floatingActionButton = findViewById(R.id.floatingActionButton);
-                    floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
-
-                    //Launch log in activity
-                    List<AuthUI.IdpConfig> providers = Arrays.asList(
-                            new AuthUI.IdpConfig.EmailBuilder().build());
-
-                    startActivityForResult(
-                            AuthUI.getInstance()
-                                    .createSignInIntentBuilder()
-                                    .setLogo(R.drawable.logo1x)
-                                    .setAvailableProviders(providers)
-                                    .build(),
-                            RC_SIGN_IN);
-                }
-                break;
             case R.id.change_picture:
-                //Checks to see if a user is logged in
-                if (user != null) {
+                    //Launch gallery Intent
                     Intent gallery =
                             new Intent(Intent.ACTION_GET_CONTENT, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
                     gallery.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                     startActivityForResult(gallery, PICK_IMAGE);
                     //https://scontent.fbtv1-1.fna.fbcdn.net/v/t31.0-8/s960x960/10679591_648893885224134_7166029734996188708_o.jpg?_nc_cat=110&_nc_sid=da1649&_nc_ohc=ioKCYq4xVOUAX9q5rm4&_nc_ht=scontent.fbtv1-1.fna&_nc_tp=7&oh=f4fc4628684bad08b6e2f8c41890816f&oe=5EA64EB2
-                } else {
-                    // No user is signed in
-                }
                 break;
             case R.id.del_acct:
                 // Get auth credentials from the user for re-authentication. The example below shows
-// email and password credentials but there are multiple possible providers,
-// such as GoogleAuthProvider or FacebookAuthProvider.
+                // email and password credentials but there are multiple possible providers,
+                // such as GoogleAuthProvider or FacebookAuthProvider.
                 AuthCredential credential = EmailAuthProvider
                         .getCredential("user@example.com", "password1234");
 
-// Prompt the user to re-provide their sign-in credentials
+                // Prompt the user to re-provide their sign-in credentials
                 user.reauthenticate(credential)
                         .addOnCompleteListener(new OnCompleteListener<Void>() {
                             @Override
                             public void onComplete(@NonNull Task<Void> task) {
-                                Log.d("!!!ONCOMPLETE", "naw");
                                 //Firebase Listener to Delete account
                                 db.collection("UserProfiles").document(user.getEmail()).get().addOnSuccessListener(
                                         new OnSuccessListener<DocumentSnapshot>() {
                                             @Override
                                             public void onSuccess(DocumentSnapshot documentSnapshot) {
                                                 if (documentSnapshot.exists()) {
+                                                    //Get List of Friends
                                                     ArrayList<String> friends = (ArrayList) documentSnapshot.get("friends");
-                                                    Log.d("!!!ONCOMPLETEFRIENDS ", String.valueOf(friends.size()));
                                                     if (friends != null) {
                                                         for (int i = 0; i < friends.size(); i++) {
-                                                            Log.d("!!!ONCOMPLETEFRIEND!!", friends.get(i).toString());
+                                                            //Remove all references to you as a friend on others profiles
                                                             db.collection("UserProfiles").document(friends.get(i)).update("friends", FieldValue.arrayRemove(documentSnapshot.get("email")));
                                                         }
                                                     }
+                                                    //Gets all requests
                                                     ArrayList<String> requests = (ArrayList) documentSnapshot.get("requests");
                                                     if (requests != null) {
                                                         for (int i = 0; i < requests.size(); i++) {
+                                                            //Removes all requests
                                                             db.document(requests.get(i)).delete();
                                                         }
                                                     }
+                                                    //Deletes the user's profile picture
                                                     FirebaseStorage.getInstance().getReference("profilePictures/" + user.getEmail()).delete();
+                                                    //Deletes the user profile
                                                     db.collection("UserProfiles").document(user.getEmail()).delete();
-                                                    //Firebase Listener to Delete account
-                                                    Log.d("USERRR", user.getEmail());
+                                                    //Deletes the FirebaseAuth Account
                                                     user.delete()
                                                             .addOnCompleteListener(new OnCompleteListener<Void>() {
                                                                 @Override
                                                                 public void onComplete(@NonNull Task<Void> task) {
                                                                     if (task.isSuccessful()) {
                                                                         Log.d("Deleted", "User account deleted.");
-                                                                        //Launch log in activity
-                                                                        List<AuthUI.IdpConfig> providers = Arrays.asList(
-                                                                                new AuthUI.IdpConfig.EmailBuilder().build());
-                                                                        startActivityForResult(
-                                                                                AuthUI.getInstance()
-                                                                                        .createSignInIntentBuilder()
-                                                                                        .setLogo(R.drawable.logo1x)
-                                                                                        .setAvailableProviders(providers)
-                                                                                        .build(),
-                                                                                RC_SIGN_IN);
+                                                                        launchLogin();
                                                                     }
                                                                 }
                                                             });
@@ -532,15 +413,7 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                                         });
                             }
                         });
-                List<AuthUI.IdpConfig> providers = Arrays.asList(
-                        new AuthUI.IdpConfig.EmailBuilder().build());
-                startActivityForResult(
-                        AuthUI.getInstance()
-                                .createSignInIntentBuilder()
-                                .setLogo(R.drawable.logo1x)
-                                .setAvailableProviders(providers)
-                                .build(),
-                        RC_SIGN_IN);
+                launchLogin();
                 break;
             case R.id.requests:
                 Intent launchReqs = new Intent(this, RequestsActivity.class);
@@ -557,88 +430,71 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
         }
         return false;
     }
-
-    public void getCurrentLocation() {
-        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        // Got last known location. In some rare situations this can be null.
-                        if (location != null) {
-                            currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                        }
-                    }
-                });
-
-    }
-
-    //https://www.youtube.com/watch?v=6u0gzjth4IE
-    private String getExtension(Uri uri) {
-        ContentResolver cr = getContentResolver();
-        MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
-        return mimeTypeMap.getExtensionFromMimeType(cr.getType(uri));
-    }
-
+    //True == addFriend False == Remove Friend
     private void addFriend(final String email, final boolean addFriend) {
-//email is in the "set"
+
         final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         db.collection("UserProfiles").document(email).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                 if (task.isSuccessful()) {
                     DocumentSnapshot document = task.getResult();
-                    //"friends", FieldValue.arrayUnion(email))
                     if (document.exists()) {
+                        //If Username Exists
                         if(addFriend) {
-                            db.collection("UserProfiles").document(user.getEmail()).update("friends", FieldValue.arrayUnion(email));
-                            db.collection("UserProfiles").document(email).update("friends", FieldValue.arrayUnion(user.getEmail()));
-                            searchView.clearFocus();
-                            Toast.makeText(FriendsSheetActivity.this, "Friend Added!", Toast.LENGTH_SHORT).show();
-                            searchView.setQuery("", false);
-                            searchView.setIconified(true);
-                            fetchFriends();
+                            if(email.equals(user.getEmail())) {
+                                Toast.makeText(FriendsSheetActivity.this, "You cannot friend yourself :(", Toast.LENGTH_SHORT).show();
+                                //Close search View
+                                searchView.clearFocus();
+                                searchView.setQuery("", false);
+                                searchView.setIconified(true);
+                            } else {
+                                //Add Friend to both profiles
+                                db.collection("UserProfiles").document(user.getEmail()).update("friends", FieldValue.arrayUnion(email));
+                                db.collection("UserProfiles").document(email).update("friends", FieldValue.arrayUnion(user.getEmail()));
+                                //Close search View
+                                searchView.clearFocus();
+                                searchView.setQuery("", false);
+                                searchView.setIconified(true);
+                                //Notify User and Updata friend recycler
+                                Toast.makeText(FriendsSheetActivity.this, "Friend Added!", Toast.LENGTH_SHORT).show();
+                                fetchFriends();
+                            }
                         } else {
+                            //Remove references from both profiles
                             db.collection("UserProfiles").document(user.getEmail()).update("friends", FieldValue.arrayRemove(email));
                             db.collection("UserProfiles").document(email).update("friends", FieldValue.arrayRemove(user.getEmail()));
                             fetchFriends();
                         }
-
                     } else {
+                        //If the username doesn't exist, notify user via toast
                         Toast.makeText(FriendsSheetActivity.this, "User does not exist", Toast.LENGTH_SHORT).show();
                     }
                 }
             }
         });
-
-
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
+        //User Chooses new Image
         if (resultCode == RESULT_OK && requestCode == PICK_IMAGE) {
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
             FirebaseStorage storageRef = FirebaseStorage.getInstance();
-
+            //Upload photoRef to profile
             StorageReference photoRef = storageRef.getReference("profilePictures/" + user.getEmail());
             photoRef.putFile(data.getData());
+            //Load new Profile Picture
             Picasso.get().load(data.getData()).transform(new CircleTransform()).into(prof_picture);
             Picasso.get().load(data.getData()).transform(new CircleTransform()).into(floatingActionButton);
         }
-
-//Sign in Results
-
+        //Sign in Results
         if (requestCode == RC_SIGN_IN) {
             IdpResponse response = IdpResponse.fromResultIntent(data);
-
             if (resultCode == RESULT_OK) {
-
-                // Successfully signed in
+                //User Sign in
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-                floatingActionButton = findViewById(R.id.floatingActionButton);
-                updateUserProfile();
 
                 //Checks to see if user's email is Verified.
                 if (!user.isEmailVerified()) {
@@ -652,15 +508,10 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                                 }
                             });
                 }
-                String tempPhotoURL;
 
-                //Pulls from Database if there is a photo, otherwise sets to null white profile
-                if (user.getPhotoUrl() == null) {
-                    floatingActionButton = findViewById(R.id.floatingActionButton);
-                    floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
-                } else {
-                    StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" + user.getEmail());
-                    storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                floatingActionButton = findViewById(R.id.floatingActionButton);
+                StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" + user.getEmail());
+                storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                         @Override
                         public void onSuccess(Uri uri) {
                             Picasso.get().load(uri).transform(new CircleTransform()).into(floatingActionButton);
@@ -671,16 +522,9 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                             floatingActionButton.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_white_24dp));
                         }
                     });
-                }
 
-
-                //Update UserProfiles
-                Map<String, Object> profile = new HashMap<>();
-                ArrayList<String> friends = new ArrayList<>();
-                profile.put("name", user.getDisplayName());
-                profile.put("email", user.getEmail());
-
-                db.collection("UserProfiles").document(user.getEmail()).update(profile);
+                updateUserProfile();
+                drawerLayout.closeDrawers();
 
             } else {
                 // Sign in failed. If response is null the user canceled the
@@ -704,34 +548,27 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
         }
 
         public void bind(final User friend) {
-            Log.d("D!!", friend.getEmail());
+            //Get Use's Display name
             displayName.setText(friend.getDisplayName());
 
+            //Attempt to load image
             StorageReference storageReference = FirebaseStorage.getInstance().getReference("profilePictures/" + friend.getEmail());
             storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                 @Override
                 public void onSuccess(Uri uri) {
-                    Log.d("SUCCESS", uri.toString());
                     Picasso.get().load(uri).transform(new CircleTransform()).into(iv);
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    Log.d("FAIL", "");
                     iv.setImageDrawable(getResources().getDrawable(R.drawable.ic_send_black_24dp));
                 }
             });
-            ;
-            //Picasso.get().load(friend.getPhotoURL()).into(iv);
-
-
+            //Sets up Request Logic
             requestButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-
                     final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
-
                     fusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
                     fusedLocationClient.getLastLocation()
                             .addOnSuccessListener(new OnSuccessListener<Location>() {
@@ -739,6 +576,7 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                                 public void onSuccess(Location location) {
                                     /* Got last known location. In some rare situations this can be null. */
                                     if (location != null) {
+                                        //Gets Current users info and places it in an empty request
                                         HashMap<String, Object> requestInfo = new HashMap<>();
                                         requestInfo.put("primaryUserLocation", new GeoPoint(location.getLatitude(), location.getLongitude()));
                                         requestInfo.put("primaryUserEmail", user.getEmail());
@@ -747,46 +585,25 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                                         requestInfo.put("midpoint", null);
                                         requestInfo.put("timestamp", FieldValue.serverTimestamp());
 
+                                        //Creates the request
                                         DocumentReference request = db.collection("Requests").document();
                                         requestInfo.put("docID", request.getPath());
                                         request.set(requestInfo);
 
+                                        //Puts the request in both user's request list
                                         db.collection("UserProfiles").document(friend.getEmail()).update("requests", FieldValue.arrayUnion(request.getPath()));
                                         db.collection("UserProfiles").document(user.getEmail()).update("requests", FieldValue.arrayUnion(request.getPath()));
 
+                                        //Launches RequestsActivity
                                         Intent launchReqs = new Intent(getApplicationContext(), RequestsActivity.class);
                                         startActivity(launchReqs);
                                     }
                                 }
                             });
-
-
                 }
             });
         }
-
-
-        private void addRequest(final String email) {
-            //email is in the "set"
-            final FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-            db.collection("UserProfiles").document(email).get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-                @Override
-                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                    if (task.isSuccessful()) {
-                        DocumentSnapshot document = task.getResult();
-                        //"friends", FieldValue.arrayUnion(email))
-                        if (document.exists()) {
-                            db.collection("UserProfiles").document(user.getEmail()).update("requests", FieldValue.arrayUnion("DocumentReferenceHere"));
-                            db.collection("UserProfiles").document(email).update("friends", FieldValue.arrayUnion(user.getEmail()));
-                        } else {
-                            Log.d("!!!DOES NOT EXIST!!!", "!!!DOES NOT EXIST!!!");
-                        }
-                    }
-                }
-            });
-
-
-        }
+        //Sets On Swipe Listener
         ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
@@ -801,14 +618,6 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                 mFriendSheetAdapter.notifyDataSetChanged();
             }
         };
-
-
-
-
-
-
-
-
     }
 
     private class FriendAdapter extends RecyclerView.Adapter<FriendHolder> {
@@ -824,18 +633,13 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
             holder.bind(mFriends.get(position));
         }
 
-        public void removeItem(int position) {
-            String removeFriend = mFriends.get(position).getEmail();
-            Log.d("REMOVE", removeFriend);
-            //mFriends.remove(position);
-
-        }
-
         @Override
         public int getItemCount() {
             return mFriends.size();
         }
 
+
+        //OnSwipeListener
         ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT) {
             @Override
             public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
@@ -846,17 +650,15 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
             public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
                 String email = mFriends.remove(viewHolder.getAdapterPosition()).getEmail();
                 addFriend(email, false);
-
                 mFriendSheetAdapter.notifyDataSetChanged();
             }
         };
 
-
-
     }
 
     //https://gist.github.com/julianshen/5829333
-//Apache License
+    //Apache License
+    //Turns an image into a circle for Flaoting action buttons
     public static class CircleTransform implements Transformation {
         @Override
         public Bitmap transform(Bitmap source) {

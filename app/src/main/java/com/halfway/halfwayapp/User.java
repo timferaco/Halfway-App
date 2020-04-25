@@ -1,6 +1,5 @@
 package com.halfway.halfwayapp;
 
-import android.net.Uri;
 
 public class User {
     private String email;
@@ -11,10 +10,6 @@ public class User {
     public User(String email,  String displayName) {
         this.email = email;
         this.displayName = displayName;
-    }
-    public  User() {
-        email = "null";
-        displayName = "null";
     }
 
     public String getDisplayName() {

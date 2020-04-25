@@ -230,20 +230,15 @@ public class ChatActivity extends AppCompatActivity
                 storageReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
-                        Log.d("PROFPIC", "SUCCESS");
                         Picasso.get().load(uri).transform(new FriendsSheetActivity.CircleTransform()).into(viewHolder.messengerImageView);
 
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
                     public void onFailure(@NonNull Exception e) {
-                        Log.d("PROFPIC", "FAIL");
-                        viewHolder.messengerImageView.setImageDrawable(getResources().getDrawable(R.drawable.ic_send_black_24dp));
+                        viewHolder.messengerImageView.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_black_24dp));
                     }
                 });
-
-
-
             }
         };
 
@@ -302,24 +297,8 @@ public class ChatActivity extends AppCompatActivity
             }
         });
 
-        /*mAddMessageImageView = findViewById(R.id.addMessageImageView);
-        mAddMessageImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("image/*");
-                startActivityForResult(intent, REQUEST_IMAGE);
-            }
-        });*/
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        // Check if user is signed in.
-        // TODO: Add code to check if user is signed in.
-    }
 
     @Override
     public void onPause() {
@@ -346,22 +325,6 @@ public class ChatActivity extends AppCompatActivity
         return true;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            //case R.id.sign_out_menu:
-                /*mFirebaseAuth.signOut();
-                Auth.GoogleSignInApi.signOut(mGoogleApiClient);
-                mUsername = ANONYMOUS;
-                startActivity(new Intent(this, SignInActivity.class));
-                finish();
-                return true;
-
-                 */
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
