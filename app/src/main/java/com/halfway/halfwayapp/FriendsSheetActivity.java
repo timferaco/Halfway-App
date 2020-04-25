@@ -561,7 +561,7 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
-                    iv.setImageDrawable(getResources().getDrawable(R.drawable.ic_send_black_24dp));
+                    iv.setImageDrawable(getResources().getDrawable(R.drawable.ic_person_black_24dp));
                 }
             });
             //Sets up Request Logic
@@ -578,11 +578,11 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
                                     if (location != null) {
                                         //Gets Current users info and places it in an empty request
                                         HashMap<String, Object> requestInfo = new HashMap<>();
-                                        requestInfo.put("primaryUserLocation", new GeoPoint(location.getLatitude(), location.getLongitude()));
+                                        requestInfo.put("primaryUserLocation", location.getLatitude() + "," + location.getLongitude());
                                         requestInfo.put("primaryUserEmail", user.getEmail());
                                         requestInfo.put("secondaryUserLocation", null);
                                         requestInfo.put("secondaryUserEmail", friend.getEmail());
-                                        requestInfo.put("midpoint", null);
+                                        requestInfo.put("midpoint", "");
                                         requestInfo.put("timestamp", FieldValue.serverTimestamp());
 
                                         //Creates the request

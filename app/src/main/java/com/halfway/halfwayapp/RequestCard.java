@@ -7,11 +7,11 @@ public class RequestCard {
 
     private String primaryUserID;
     private String secondaryUserID;
-    private GeoPoint midpoint;
+    private String midpoint;
     private String docID;
     private Timestamp timestamp;
 
-    RequestCard(String pdocID, String pUserID,  String secUserId, GeoPoint mid, Timestamp mTimestamp) {
+    RequestCard(String pdocID, String pUserID,  String secUserId, String mid, Timestamp mTimestamp) {
         docID = pdocID;
         primaryUserID = pUserID;
         secondaryUserID = secUserId;
@@ -23,7 +23,7 @@ public class RequestCard {
         return docID;
     }
 
-    public GeoPoint getMidpoint() {
+    public String getMidpoint() {
         return midpoint;
     }
 

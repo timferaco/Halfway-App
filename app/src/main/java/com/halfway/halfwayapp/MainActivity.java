@@ -10,6 +10,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -234,9 +235,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         mMap.setMyLocationEnabled(true);
         LatLng zoomLocation;
-        Log.d("STRiNGEXT", getIntent().getStringExtra("latitude"));
         if(!getIntent().getStringExtra("latitude").equals("null")) {
             zoomLocation = new LatLng(Double.valueOf(getIntent().getStringExtra("latitude")), Double.valueOf(getIntent().getStringExtra("longitude")));
+
+            mMap.addMarker(new MarkerOptions().position(zoomLocation).anchor(.5f, .5f).title("Midpoint"));
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(zoomLocation, 15));
         } else {
 
@@ -438,7 +440,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             Request request = new Request.Builder()
                     .url("https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location="+ getIntent().getStringExtra("latitude") + "," + getIntent().getStringExtra("longitude") +"&radius=100000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ")
                     .build();
-
+            Log.d("Request", "https://maps.googleapis.com/maps/api/place/textsearch/json?type=restaurant&location="+ getIntent().getStringExtra("latitude") + "," + getIntent().getStringExtra("longitude") +"&radius=100000&key=AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ");
             try (Response response = mHTTPClient.newCall(request).execute()) {
                 Log.d("CALL", "doInBackground: making call to Google API");
                 return response.body().string();
