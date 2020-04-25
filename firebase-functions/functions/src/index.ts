@@ -46,7 +46,7 @@ export const findMidpoint = functions.https.onCall((data) => {
             mode: TravelMode["driving"],
             key: "AIzaSyACLyHMHhi7tsD7JRHAD4zubgFVZ7TepQQ"
         },
-        timeout: 10000, //milliseconds
+        timeout: 100000, //milliseconds
     })
     .then((r) => {
         if (r.data.status === Status.OK) {
