@@ -23,9 +23,7 @@
         app:headerLayout="@layout/header"/>
 
 
-    <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context="com.halfway.halfwayapp.MainActivity">
@@ -48,7 +46,7 @@
             android:background="@drawable/rounded_corners_sheet"
             android:orientation="vertical"
             app:behavior_hideable="false"
-            app:behavior_peekHeight="125dp"
+            app:behavior_peekHeight="250dp"
             app:layout_behavior="@string/bottom_sheet_behavior">
 
             <androidx.recyclerview.widget.RecyclerView

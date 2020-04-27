@@ -144,7 +144,7 @@ public class FriendsSheetActivity extends AppCompatActivity implements OnMapRead
         new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(mFriendSheetRecycler);
         mFriendSheetRecycler.setAdapter(mFriendSheetAdapter);
 
-        //Add decor
+        //Add divider between cells
         DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
         mFriendSheetRecycler.addItemDecoration(itemDecor);
 

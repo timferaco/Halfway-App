@@ -2,23 +2,23 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:id="@+id/friends"
-        android:icon="@drawable/ic_people_outline_black_24dp"
-        android:title="Friends" />
-    <item
-        android:id="@+id/change_picture"
-        android:icon="@drawable/ic_crop_original_black_24dp"
-        android:title="Change Picture" />
-    <item
         android:id="@+id/requests"
         android:icon="@drawable/ic_send_black_24dp"
         android:title="Requests" />
+    <item
+        android:id="@+id/friends"
+        android:icon="@drawable/ic_chat_bubble_outline_black_24dp"
+        android:title="Chat" />
     <group
         android:id="@+id/acct_actions"
         android:menuCategory="container"
         android:visible="true">
         <item android:title="Account">
             <menu>
+                <item
+                    android:id="@+id/change_picture"
+                    android:icon="@drawable/ic_crop_original_black_24dp"
+                    android:title="Change Picture" />
                 <item
                     android:id="@+id/log_out"
                     android:icon="@drawable/ic_exit_to_app_black_24dp"

@@ -13,6 +13,7 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -57,6 +58,11 @@ public class RequestsActivity extends AppCompatActivity {
         mReqRecycler = findViewById(R.id.req_recycler);
         mReqRecycler.setLayoutManager(new LinearLayoutManager(this));
         mReqRecycler.setAdapter(mReqAdapter);
+
+        //Add dividers between cells
+        DividerItemDecoration itemDecor = new DividerItemDecoration(getBaseContext(), DividerItemDecoration.VERTICAL);
+        mReqRecycler.addItemDecoration(itemDecor);
+
         mRequests = new ArrayList<RequestCard>();
         db = FirebaseFirestore.getInstance();
 

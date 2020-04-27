@@ -7,7 +7,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#FFFFFF"
-    android:visibility="visible"
     tools:context=".MainActivity"
     tools:openDrawer="start">
 
@@ -18,6 +17,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="start"
         android:background="#FFFFFF"
+        android:visibility="visible"
         app:headerLayout="@layout/header"
         app:itemTextColor="#000000"
         app:menu="@menu/main_menu" />
@@ -45,7 +45,7 @@
             android:background="@drawable/rounded_corners_sheet"
             android:orientation="vertical"
             app:behavior_hideable="false"
-            app:behavior_peekHeight="125dp"
+            app:behavior_peekHeight="200dp"
             app:layout_behavior="@string/bottom_sheet_behavior">
 
             <SearchView
@@ -55,14 +55,32 @@
                 android:layout_marginLeft="10dp"
                 android:layout_marginTop="15dp"
                 android:layout_marginRight="10dp"
-                android:background="@drawable/rounded_text_bubble" />
+                android:background="@drawable/rounded_text_bubble"
+                android:inputType="textWebEmailAddress"
+                android:queryHint="Search for friends using email">
+
+            </SearchView>
+
+            <TextView
+                android:id="@+id/sheetTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="15dp"
+                android:layout_marginTop="15dp"
+                android:layout_weight="1"
+                android:text="Friends"
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.AppCompat.Large"
+                android:textColor="#E91E63"
+                android:textStyle="bold" />
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/friends_sheet_recycler"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginLeft="10dp"
-                android:layout_marginTop="25dp"
+                android:layout_marginTop="5dp"
                 android:layout_marginRight="10dp"
                 android:clipToPadding="false"
                 android:gravity="center_horizontal" />
